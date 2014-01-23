@@ -5,12 +5,15 @@
 #include "heap.h"
 
 
+
 typedef struct sthread_t
 {
 	unsigned int tid;
 	void *retval;
 	int pid;
 	struct __mvheap heap_struct;
+	struct sthread_t *next;
+	struct sthread_t *pre;
 } sthread_t;
 
 typedef struct sthread_attr_t 
@@ -24,18 +27,17 @@ struct __argwrapper
 	void *args;
 };
 
-/* alloc a new tid */
+
 unsigned int __alloc_tid();
-
-/* alloc a stack for the new thread */
 void *__alloc_stack(unsigned int size);
-
-void __init_localtid();
-
-void __init_threadpool();
-
+void __init_localtid(void);
+void __init_threadpool(void);
 void *__start_routine(void *arw);
-
+void __init_threadlist(void);
+void __addtask(sthread_t *task);
+sthread_t *__nexttask(sthread_t *task);
+sthread_t *__pretask(sthread_t *task);
+sthread_t *__currenttask(void);
 
 
 #endif

@@ -1,2 +1,4 @@
 
-int __jp_set_mvspace_flag(void);
+int __mvspace_setflag(void);
+int __mvspace_commit(void);
+int __mvspace_pull(void);

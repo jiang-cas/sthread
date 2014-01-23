@@ -1,4 +1,5 @@
 #include "include/mutex.h"
+#include <unistd.h>
 #include "include/globals.h"
 
 int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr) 

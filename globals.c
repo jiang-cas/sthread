@@ -11,3 +11,5 @@ unsigned int __selftid;
 sthread_t *__threadpool;
 
 sthread_t *__threadlist;
+
+sthread_t *__lasttask;

@@ -1,16 +1,19 @@
 #include "include/task.h"
 #include "include/globals.h"
-#include <stdlib.h>
 #include "include/settings.h"
+#include "include/sync.h"
+#include "include/mvspace.h"
 #include <sys/mman.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sched.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
+#include <sched.h>
 
 unsigned int __alloc_tid()
 {
@@ -42,6 +45,58 @@ void *__start_routine(void *arw)
 	return func(args);
 }
 
+void __init_threadlist(void)
+{
+	__threadlist = &__threadpool[0];
+	__lasttask = __threadlist;
+	__lasttask->pre = NULL;
+	__lasttask->next = NULL;
+}
+
+void __addtask(sthread_t *task)
+{
+	__lasttask->next = task;
+	task->pre = __lasttask;
+	task->next = NULL;
+	__lasttask = task;
+}
+
+sthread_t *__nexttask(sthread_t *task)
+{
+	if(task)
+		return task->next;
+	return NULL;
+}
+
+sthread_t *__pretask(sthread_t *task)
+{
+	if(task)
+		return task->pre;
+	return NULL;
+}
+
+sthread_t *__currenttask(void)
+{
+	return &__threadpool[__selftid];
+}
+
+
+void __init_sync_handlers(void)
+{
+	struct sigaction newact, oldact;
+	struct sigaction newact2, oldact2;
+	newact.sa_handler = __sigusr1_handler;
+	sigemptyset(&newact.sa_mask);
+	newact.sa_flags = 0;
+	sigaction(SIGUSR1, &newact, &oldact);
+	
+	newact2.sa_handler = __sigusr2_handler;
+	sigemptyset(&newact2.sa_mask);
+	newact2.sa_flags = 0;
+	sigaction(SIGUSR1, &newact2, &oldact2);
+
+}
+
 /* initial sthreads */
 __attribute__((constructor)) void init()
 {
@@ -49,12 +104,16 @@ __attribute__((constructor)) void init()
 	__init_localtid();
 	/* allocate threadpool for threads info */
 	__init_threadpool();
+	__init_threadlist();
 	/* allocate mvheap malloc space */
 	__init_global_heap();
 	/* init mvheap for main thread */
 	__init_heap(0);
 	/* init global data and bss for main thread */
-	__jp_set_mvspace_flag();
+	__mvspace_setflag();
+
+	/* setup signal handlers */
+	__init_sync_handlers();
 }
 
 
@@ -84,6 +143,7 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 			newthread->pid = ret;
 			newthread->retval = NULL;
 			__threadpool[newthread->tid] = *newthread;
+			__addtask(&__threadpool[newthread->tid]);
 			return ret;
 		}
 	} else {
