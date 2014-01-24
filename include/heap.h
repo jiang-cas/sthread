@@ -1,23 +1,26 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-
 #include "malloc.h"
-
 
 struct __mvheap
 {
 	void *privatebase;
 	mspace privatemsp;
+	void *sharedbase;
+	mspace sharedmsp;
 };
-
 
 void __init_global_heap();
 
 void __init_heap(unsigned int tid);
 
-void *mvmalloc(size_t bytes);
+void *mvprivate_malloc(size_t bytes);
 
-void mvfree(void *mem);
+void mvprivate_free(void *mem);
+
+void *mvshared_malloc(size_t bytes);
+
+void mvshared_free(void *mem);
 
 #endif

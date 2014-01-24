@@ -17,6 +17,7 @@ void *func(void *args)
 //	geap_push(a, a+sizeof(int)*N);
 	sthread_exit(NULL);
 //exit(0);
+	return NULL;
 }
 
 int main()
@@ -24,7 +25,7 @@ int main()
 	struct sthread_t newthread[N];
 	int ret;
 	int i;
-	a = mvmalloc(sizeof(int)*N);
+	a = mvprivate_malloc(sizeof(int)*N);
 //	geap_set_flag();
 //	for(i=0;i<N;i++) 
 //		a[i] = 5;
@@ -43,7 +44,7 @@ int main()
 	}
 	printf("\n");
 
-	mvfree(a);
+	mvprivate_free(a);
 
 	return 0;
 }

@@ -5,6 +5,7 @@
 
 
 extern void *__privatebase;
+extern void *__sharedbase;
 extern unsigned int __localtid;
 extern unsigned int __selftid;
 extern void *__mutexbase;

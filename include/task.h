@@ -40,4 +40,10 @@ sthread_t *__pretask(sthread_t *task);
 sthread_t *__currenttask(void);
 
 
+__attribute__((constructor)) void init();
+int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(void *), void *args);
+sthread_t sthread_self(void);
+
+void sthread_exit(void *value);
+int sthread_join(sthread_t thread, void **thread_return);
 #endif
