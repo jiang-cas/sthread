@@ -35,6 +35,7 @@ void sync(void)
 
 	if(__currenttask() == __lasttask) {
 		pull_spin = 0;
+		/* notify all process in the group to pull */
 		kill(0, SIGUSR2);
 	}
 	else pull_spin = 1;

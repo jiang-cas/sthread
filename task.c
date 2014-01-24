@@ -29,6 +29,7 @@ void *__alloc_stack(unsigned int size)
 void __init_localtid(void)
 {
 	__localtid = 1;
+	__selftid = 0;
 }
 
 void __init_threadpool(void)
@@ -42,6 +43,8 @@ void *__start_routine(void *arw)
 	void *args = ((struct __argwrapper *)arw)->args;
 	__selftid = __localtid;
 	__init_heap(__localtid);
+	setpgid(0, __maintask->pid);
+
 	return func(args);
 }
 
@@ -51,6 +54,9 @@ void __init_threadlist(void)
 	__lasttask = __threadlist;
 	__lasttask->pre = NULL;
 	__lasttask->next = NULL;
+	__lasttask->tid = __selftid;
+	__lasttask->pid = getpid();
+	__maintask = __lasttask;
 }
 
 void __addtask(sthread_t *task)
@@ -94,6 +100,9 @@ void __init_sync_handlers(void)
 	sigemptyset(&newact2.sa_mask);
 	newact2.sa_flags = 0;
 	sigaction(SIGUSR1, &newact2, &oldact2);
+
+	/* setup process group */
+	setpgid(0, 0);
 
 }
 

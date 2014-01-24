@@ -13,3 +13,5 @@ sthread_t *__threadpool;
 sthread_t *__threadlist;
 
 sthread_t *__lasttask;
+
+sthread_t *__maintask;

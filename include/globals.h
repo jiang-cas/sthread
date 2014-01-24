@@ -12,5 +12,6 @@ extern void *__mutexbase;
 extern sthread_t *__threadpool;
 extern sthread_t *__threadlist;
 extern sthread_t *__lasttask;
+extern sthread_t *__maintask;
 
 #endif
