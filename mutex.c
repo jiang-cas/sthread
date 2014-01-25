@@ -17,6 +17,7 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 int sthread_mutex_destroy(sthread_mutex_t *mutex)
 {
 	if(mutex->mutex && mutex->mutex->locked == 0) {
+		/* free twice ? */
 		mvshared_free(mutex->mutex);
 		return 0;
 	}

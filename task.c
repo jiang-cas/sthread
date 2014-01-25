@@ -90,17 +90,11 @@ sthread_t *__currenttask(void)
 void __init_sync_handlers(void)
 {
 	struct sigaction newact, oldact;
-	struct sigaction newact2, oldact2;
-	newact.sa_handler = __sigusr1_handler;
+	newact.sa_sigaction = __sigusr1_handler;
 	sigemptyset(&newact.sa_mask);
-	newact.sa_flags = 0;
+	newact.sa_flags = SA_SIGINFO;
 	sigaction(SIGUSR1, &newact, &oldact);
 	
-	newact2.sa_handler = __sigusr2_handler;
-	sigemptyset(&newact2.sa_mask);
-	newact2.sa_flags = 0;
-	sigaction(SIGUSR1, &newact2, &oldact2);
-
 	/* setup process group */
 	setpgid(0, 0);
 

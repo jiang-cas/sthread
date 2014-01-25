@@ -12,8 +12,10 @@ struct barrier_struct
 
 typedef struct sthread_barrier_t
 {
-	struct barrier_struct barrier;
-} stread_barrier_t;
+	/* totalcount is initialized once, so that it won't change */
+	int totalcount;
+	struct barrier_struct *barrier;
+} sthread_barrier_t;
 
 typedef struct sthread_barrierattr_t
 {} sthread_barrierattr_t;
