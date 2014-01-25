@@ -3,6 +3,7 @@
 #include "include/mvspace.h"
 #include "include/globals.h"
 #include "include/sync.h"
+#include "include/settings.h"
 
 
 #define SIG_COMMIT 0
@@ -32,12 +33,17 @@ void sync(void)
 	int ret;
 	union sigval value;
 
+	__debug_print("tid %d , sync0\n", __selftid);	
+
+
 	/* if it is the main thread, go on committing */
 	if(__selftid == 0) commit_spin = 0;
 	else commit_spin = 1;
 	while(commit_spin) {
 		pause();
 	}
+	
+	__debug_print("tid %d , sync1\n", __selftid);	
 	
 	__mvspace_commit();
 	/*notify the next task to commit */
@@ -61,6 +67,7 @@ void sync(void)
 	while(pull_spin) {
 		pause();
 	}
+	__debug_print("tid %d , sync2\n", __selftid);	
 
 	__mvspace_pull();
 }

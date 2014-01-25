@@ -86,6 +86,15 @@ sthread_t *__currenttask(void)
 	return &__threadpool[__selftid];
 }
 
+void __removetask(sthread_t *task)
+{
+	sthread_t *pre = task->pre;
+	sthread_t *next = task->next;
+
+	pre->next = next;
+	next->pre = pre;
+}
+
 
 void __init_sync_handlers(void)
 {
@@ -139,7 +148,7 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 		arw.args = args;
 		ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, SIGCHLD | 0, &arw);
 		if(-1 == ret) {
-			__error_log("clone failed %s\n", strerror(errno));
+			perror("clone");
 			return -2;
 		} else {
 			newthread->tid = __alloc_tid();
@@ -150,7 +159,7 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 			return ret;
 		}
 	} else {
-		__error_log("alloc stack failed %s\n", strerror(errno));
+		perror("stack alloc");
 		return -1;
 	}
 }
@@ -164,12 +173,15 @@ sthread_t sthread_self(void)
 
 void sthread_exit(void *value)
 {
+	sync();
 	__threadpool[__localtid].retval = value;
+	__removetask(__currenttask());
 	exit(0);
 }
 
 int sthread_join(sthread_t thread, void **thread_return)
 {
+	sync();
 	waitpid(thread.pid, NULL, 0);
 	if(thread_return)
 		*thread_return = __threadpool[thread.tid].retval;

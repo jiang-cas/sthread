@@ -1,8 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-
-#define __error_log printf
+#define __debug_print printf
 
 
 #define STACKSIZE 4096

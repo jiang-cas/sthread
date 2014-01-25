@@ -1,7 +1,7 @@
 #include "../sthread.h"
 #include <stdio.h>
 //#include "geap.h"
-#define N 10
+#define N 1
 
 #define LOG(x) printf("res %d \n", x)
 
