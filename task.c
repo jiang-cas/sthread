@@ -37,13 +37,34 @@ void __init_threadpool(void)
 	__threadpool = (sthread_t *)mmap(NULL, MAXTHREADS * sizeof(sthread_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 }
 
+void __addtask(sthread_t *task)
+{
+	__lasttask->next = task;
+	task->pre = __lasttask;
+	task->next = NULL;
+	__lasttask = task;
+}
+
+void __setup_newtask(void)
+{
+	__selftid = __localtid;
+	__debug_print("selftid %d \n", __selftid);
+	__init_heap(__localtid);
+	setpgid(0, __maintask->pid);
+	__currenttask()->tid = __selftid;
+	__currenttask()->pid = getpid();
+	__currenttask()->syncpoint1 = 0;
+	__currenttask()->syncpoint2 = 0;
+	__currenttask()->retval = NULL;
+	__addtask(__currenttask());
+}
+
 void *__start_routine(void *arw)
 {
 	void *(*func)(void *) = ((struct __argwrapper *)arw)->func;
 	void *args = ((struct __argwrapper *)arw)->args;
-	__selftid = __localtid;
-	__init_heap(__localtid);
-	setpgid(0, __maintask->pid);
+	
+	__setup_newtask();
 
 	return func(args);
 }
@@ -56,16 +77,11 @@ void __init_threadlist(void)
 	__lasttask->next = NULL;
 	__lasttask->tid = __selftid;
 	__lasttask->pid = getpid();
+	__lasttask->syncpoint1 = 0;
+	__lasttask->syncpoint2 = 0;
 	__maintask = __lasttask;
 }
 
-void __addtask(sthread_t *task)
-{
-	__lasttask->next = task;
-	task->pre = __lasttask;
-	task->next = NULL;
-	__lasttask = task;
-}
 
 sthread_t *__nexttask(sthread_t *task)
 {
@@ -151,11 +167,8 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 			perror("clone");
 			return -2;
 		} else {
+			/* only returns the tid, and the rest are setup by the child process */
 			newthread->tid = __alloc_tid();
-			newthread->pid = ret;
-			newthread->retval = NULL;
-			__threadpool[newthread->tid] = *newthread;
-			__addtask(&__threadpool[newthread->tid]);
 			return ret;
 		}
 	} else {

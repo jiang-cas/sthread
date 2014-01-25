@@ -12,6 +12,8 @@ typedef struct sthread_t
 	void *retval;
 	int pid;
 	struct __mvheap heap_struct;
+	int syncpoint1;
+	int syncpoint2;
 	struct sthread_t *next;
 	struct sthread_t *pre;
 } sthread_t;

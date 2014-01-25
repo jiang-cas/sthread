@@ -28,13 +28,41 @@ void __sigusr1_handler(int signo, siginfo_t *si, void *ucontext)
 	}
 }
 
+void __arrived_syncpoint1(void)
+{
+	__currenttask()->syncpoint1 = 1;
+}
+int __has_arrived_syncpoint1(sthread_t *task)
+{
+	return task->syncpoint1;	
+}
+void __arrived_syncpoint2(void)
+{
+	__currenttask()->syncpoint2 = 1;
+}
+int __all_have_arrived_syncpoint2()
+{
+	sthread_t *t = __threadlist;
+	while(t->next)
+	{
+		if(t->syncpoint2 == 0)return 0;
+	}
+	return 1;
+}
+void __init_syncpoints(void)
+{
+	__currenttask()->syncpoint1 = 0;
+	__currenttask()->syncpoint2 = 0;
+}
+
 void sync(void)
 {
 	int ret;
 	union sigval value;
 
+	
+	__init_syncpoints();
 	__debug_print("tid %d , sync0\n", __selftid);	
-
 
 	/* if it is the main thread, go on committing */
 	if(__selftid == 0) commit_spin = 0;
@@ -42,32 +70,45 @@ void sync(void)
 	while(commit_spin) {
 		pause();
 	}
-	
+
 	__debug_print("tid %d , sync1\n", __selftid);	
+	__arrived_syncpoint1();
+	
 	
 	__mvspace_commit();
 	/*notify the next task to commit */
 	value.sival_int = SIG_COMMIT;
 	/* chances are that a thread signals next, but the next thread hasn't reach pause, how to fix it ?? */
-	ret = sigqueue(__nexttask(__currenttask())->pid, SIGUSR1, value);
-	if(ret) 
-		perror("sigqueue");
+
+	while(!__has_arrived_syncpoint1(__nexttask(__currenttask()))) {
+
+	__debug_print("tid %d , sync1.5   next tid %d\n", __selftid, __nexttask(__currenttask())->tid);	
+		ret = sigqueue(__nexttask(__currenttask())->pid, SIGUSR1, value);
+		if(ret) 
+			perror("sigqueue");
+
+	}
+	__debug_print("tid %d , sync2   next tid %d\n", __selftid, __nexttask(__currenttask())->tid);	
 
 	if(__currenttask() == __lasttask) {
 		pull_spin = 0;
 		/* notify all process in the group to pull */
 		value.sival_int = SIG_PULL;
 		/* same problem, even probably, because all threads in the group are notified, how to fix it ?? */
-		ret = sigqueue(0, SIGUSR1, value);
-		if(ret) 
-			perror("sigqueue");
+		while(!__all_have_arrived_syncpoint2()) {
+			ret = sigqueue(0, SIGUSR1, value);
+			if(ret) 
+				perror("sigqueue");
+		}
 	}
 	else pull_spin = 1;
 
 	while(pull_spin) {
 		pause();
 	}
-	__debug_print("tid %d , sync2\n", __selftid);	
+
+	__arrived_syncpoint2();
+	__debug_print("tid %d , sync3\n", __selftid);	
 
 	__mvspace_pull();
 }
