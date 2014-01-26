@@ -4,6 +4,7 @@
 #include "include/globals.h"
 #include "include/sync.h"
 #include "include/settings.h"
+#include "include/task.h"
 
 
 
@@ -68,23 +69,33 @@ void sthread_sync(int type, void *item)
 	/* if it is the main thread, go on committing */
 	if(__selftid == 0) commit_spin = 0;
 	else commit_spin = 1;
+
 	while(commit_spin) {
 		pause();
 	}
 
-	//__debug_print("tid %d , sync1\n", __selftid);	
-	__arrived_syncpoint1();
-	
+	__debug_print("tid %d , sync1\n", __selftid);	
 	
 	__mvspace_commit();
-
 
 /* some cases here */
 	if(type == SIG_MUTEX_UNLOCK && item) {
 		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
 		mutex->mutex->locked = 0;
 	}
+	if(type == SIG_MUTEX_LOCK && item) {
+		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
+		__debug_print("tid %d before lock\n", __selftid);
+		while(!(__sync_val_compare_and_swap(&(mutex->mutex->locked), 0, 1) == 0)) {
+			/* this pause will answer to the sigusr1 sent by previous mutex_unlock, the sighanlder doesn't matter */
+			__debug_print("tid %d remove task %p \n", __selftid, __currenttask());
+			__removetask(__currenttask());
+			pause();
+		}
+		__debug_print("tid %d got lock\n", __selftid);
+	}
 
+	__arrived_syncpoint1();
 
 
 	/*notify the next task to commit */
@@ -92,7 +103,7 @@ void sthread_sync(int type, void *item)
 	/* chances are that a thread signals next, but the next thread hasn't reach pause, how to fix it ?? */
 
 	nexttask = __nexttask(__currenttask());
-	//__debug_print("next task %d\n", nexttask);
+	__debug_print("tid %d sync2 next task %d\n", __selftid, nexttask->tid);
 	if(nexttask) {
 		while(!__has_arrived_syncpoint1(__nexttask(__currenttask()))) {
 
@@ -104,14 +115,9 @@ void sthread_sync(int type, void *item)
 		}
 	//__debug_print("tid %d , sync2   next tid %d\n", __selftid, nexttask->tid);	
 	}
+	__debug_print("tid %d , sync3 %d\n", __selftid);	
 
-	if(type == SIG_MUTEX_LOCK && item) {
-		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
-		while(!(__sync_val_compare_and_swap(&(mutex->mutex->locked), 0, 1) == 0)) {
-			/* this pause will answer to the sigusr1 sent by previous mutex_unlock, the sighanlder doesn't matter */
-			pause();
-		}
-	}
+
 
 	if(type == SIG_BARRIER && item) {
 		sthread_barrier_t *barrier = (sthread_barrier_t *)item;
@@ -135,36 +141,36 @@ void sthread_sync(int type, void *item)
 
 
 		//__debug_print("sync2.5   current == last %d\n", __currenttask() == (*__lasttask));	
-	if(__currenttask() == (*__lasttask)) {
+	pull_spin = 1;
+	__debug_print("tid %d  sync4 \n", __selftid);	
+	while(pull_spin) {
+		if(__currenttask() == (*__lasttask)) {
 
-		//__debug_print("sync3   current == last %d\n", __currenttask() == (*__lasttask));	
-		pull_spin = 0;
-		/* notify all process in the group to pull */
-		value.sival_int = SIG_PULL;
-		/* same problem, even probably, because all threads in the group are notified, how to fix it ?? */
-		while(!__all_have_arrived_syncpoint2()) {
-			/* sigqueue cannot send to a process group.... */
-			ret = kill(0, SIGUSR2);
-			if(ret) 
-				perror("kill");
+			//__debug_print("sync3   current == last %d\n", __currenttask() == (*__lasttask));	
+			/* notify all process in the group to pull */
+			value.sival_int = SIG_PULL;
+			/* same problem, even probably, because all threads in the group are notified, how to fix it ?? */
+			while(!__all_have_arrived_syncpoint2()) {
+				/* sigqueue cannot send to a process group.... */
+				ret = kill(0, SIGUSR2);
+				if(ret) 
+					perror("kill");
+			}
+			break;
 		}
 	}
-	else pull_spin = 1;
 	//__debug_print("sync4   current == last %d\n", __currenttask() == (*__lasttask));	
-
-	while(pull_spin) {
-		pause();
-	}
-
 	__arrived_syncpoint2();
-	//__debug_print("tid %d , sync3\n", __selftid);	
+	__debug_print("tid %d , sync5\n", __selftid);	
 
 	__mvspace_pull();
 }
 
 int sync_mutex_lock(sthread_mutex_t *mutex)
 {
+	__debug_print("enter lock\n");
 	if(mutex->mutex) {
+		__debug_print("enter mutex lock\n");
 		sthread_sync(SIG_MUTEX_LOCK, mutex);
 		return 0;
 	}

@@ -37,6 +37,7 @@ void __init_threadpool(void);
 void *__start_routine(void *arw);
 void __init_threadlist(void);
 void __addtask(sthread_t *task);
+void __removetask(sthread_t *task);
 sthread_t *__nexttask(sthread_t *task);
 sthread_t *__pretask(sthread_t *task);
 sthread_t *__currenttask(void);

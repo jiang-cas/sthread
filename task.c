@@ -113,11 +113,19 @@ sthread_t *__currenttask(void)
 
 void __removetask(sthread_t *task)
 {
-	sthread_t *pre = task->pre;
-	sthread_t *next = task->next;
+	if(task->pre || task->next) {
+		sthread_t *pre = task->pre;
+		sthread_t *next = task->next;
+		if(pre)
+			pre->next = next;
+		if(next)
+			next->pre = pre;
 
-	pre->next = next;
-	next->pre = pre;
+		task->pre = NULL;
+		task->next = NULL;
+		if(task == *__lasttask)
+			*__lasttask = pre;
+	}
 }
 
 
