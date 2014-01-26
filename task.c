@@ -39,16 +39,24 @@ void __init_threadpool(void)
 
 void __addtask(sthread_t *task)
 {
-	__lasttask->next = task;
-	task->pre = __lasttask;
+	(*__lasttask)->next = task;
+	task->pre = *__lasttask;
 	task->next = NULL;
-	__lasttask = task;
+	*__lasttask = task;
+}
+
+void __registertask(void)
+{
+	//__debug_print("registercount here1 %d\n", *__registeredcount);
+	__sync_add_and_fetch(__registeredcount, 1);
+	//__debug_print("registercount here2 %d\n", *__registeredcount);
 }
 
 void __setup_newtask(void)
 {
+	//__debug_print("enter setup newtask\n");
 	__selftid = __localtid;
-	__debug_print("selftid %d \n", __selftid);
+	//__debug_print("selftid %d \n", __selftid);
 	__init_heap(__localtid);
 	setpgid(0, __maintask->pid);
 	__currenttask()->tid = __selftid;
@@ -57,6 +65,7 @@ void __setup_newtask(void)
 	__currenttask()->syncpoint2 = 0;
 	__currenttask()->retval = NULL;
 	__addtask(__currenttask());
+	__registertask();
 }
 
 void *__start_routine(void *arw)
@@ -72,14 +81,14 @@ void *__start_routine(void *arw)
 void __init_threadlist(void)
 {
 	__threadlist = &__threadpool[0];
-	__lasttask = __threadlist;
-	__lasttask->pre = NULL;
-	__lasttask->next = NULL;
-	__lasttask->tid = __selftid;
-	__lasttask->pid = getpid();
-	__lasttask->syncpoint1 = 0;
-	__lasttask->syncpoint2 = 0;
-	__maintask = __lasttask;
+	*__lasttask = __threadlist;
+	(*__lasttask)->pre = NULL;
+	(*__lasttask)->next = NULL;
+	(*__lasttask)->tid = __selftid;
+	(*__lasttask)->pid = getpid();
+	(*__lasttask)->syncpoint1 = 0;
+	(*__lasttask)->syncpoint2 = 0;
+	__maintask = *__lasttask;
 }
 
 
@@ -115,14 +124,28 @@ void __removetask(sthread_t *task)
 void __init_sync_handlers(void)
 {
 	struct sigaction newact, oldact;
+	struct sigaction newact2, oldact2;
 	newact.sa_sigaction = __sigusr1_handler;
 	sigemptyset(&newact.sa_mask);
 	newact.sa_flags = SA_SIGINFO;
 	sigaction(SIGUSR1, &newact, &oldact);
+	newact2.sa_handler = __sigusr2_handler;
+	sigemptyset(&newact2.sa_mask);
+	newact2.sa_flags = 0;
+	sigaction(SIGUSR2, &newact2, &oldact2);
 	
 	/* setup process group */
 	setpgid(0, 0);
 
+}
+
+void __init_shared_variable(void)
+{
+	__registeredcount = (unsigned int *)mvshared_malloc(sizeof(unsigned int));
+//	__registeredcount = (unsigned int *)mmap(NULL, sizeof(unsigned int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	*__registeredcount = 0;
+	
+	__lasttask = (sthread_t **)mvshared_malloc(sizeof(sthread_t **));
 }
 
 /* initial sthreads */
@@ -132,14 +155,15 @@ __attribute__((constructor)) void init()
 	__init_localtid();
 	/* allocate threadpool for threads info */
 	__init_threadpool();
-	__init_threadlist();
 	/* allocate mvheap malloc space */
 	__init_global_heap();
 	/* init mvheap for main thread */
 	__init_heap(0);
 	/* init global data and bss for main thread */
 	__mvspace_setflag();
-
+	/* init register thread totalcount */	
+	__init_shared_variable();
+	__init_threadlist();
 	/* setup signal handlers */
 	__init_sync_handlers();
 }
@@ -171,10 +195,9 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 			newthread->tid = __alloc_tid();
 			return ret;
 		}
-	} else {
-		perror("stack alloc");
-		return -1;
 	}
+	perror("stack alloc");
+	return -1;
 }
 
 sthread_t sthread_self(void)
@@ -186,7 +209,7 @@ sthread_t sthread_self(void)
 
 void sthread_exit(void *value)
 {
-	sync();
+	sthread_sync(SIG_NORMAL, NULL);
 	__threadpool[__localtid].retval = value;
 	__removetask(__currenttask());
 	exit(0);
@@ -194,9 +217,15 @@ void sthread_exit(void *value)
 
 int sthread_join(sthread_t thread, void **thread_return)
 {
-	sync();
+	sthread_sync(SIG_NORMAL, NULL);
 	waitpid(thread.pid, NULL, 0);
 	if(thread_return)
 		*thread_return = __threadpool[thread.tid].retval;
 	return 0;
+}
+
+
+void sthread_register(unsigned int n)
+{
+	while(*__registeredcount != n);
 }
