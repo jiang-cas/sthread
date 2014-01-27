@@ -2,13 +2,13 @@
 #include <unistd.h>
 #include "include/globals.h"
 #include "include/sync.h"
+#include "include/semaphore.h"
 
 int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr) 
 {
-	mutex->mutex = (struct mutex_struct *)mvshared_malloc(sizeof(struct mutex_struct));
+	mutex->mutex = new_sem();
 	if(mutex->mutex) {
-		mutex->mutex->locked = 0;
-		mutex->mutex->creator = __currenttask(); 
+		init_sem(mutex->mutex, 1);
 		return 0;
 	}
 	return -1;
@@ -16,9 +16,8 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 
 int sthread_mutex_destroy(sthread_mutex_t *mutex)
 {
-	if(mutex->mutex && mutex->mutex->locked == 0) {
-		/* free twice ? */
-		mvshared_free(mutex->mutex);
+	if(mutex->mutex) {
+		del_sem(mutex->mutex);
 		return 0;
 	}
 	return -1;
@@ -28,7 +27,9 @@ int sthread_mutex_trylock(sthread_mutex_t *mutex)
 {
 	/*trylock does not neccessarily acquired the lock, so there is no need to sync */
 	if(mutex->mutex) {
-		if(__sync_val_compare_and_swap(&(mutex->mutex->locked), 0, 1) == 0) return 0;
+		if(read_sem(mutex->mutex) > 0)
+			p_sem(mutex->mutex);
+			return 0;
 	}
 	return -1;
 }

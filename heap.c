@@ -11,7 +11,7 @@ void __init_global_heap()
 }
 
 #define SELF_THREAD (__threadpool[__selftid])
-#define SELF_HEAP (SELF_THREAD.heap_struct)
+#define SELF_HEAP (SELF_THREAD.heap)
 
 /* create mspace in the right place */
 void __init_heap(unsigned int tid)

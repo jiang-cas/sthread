@@ -1,5 +1,8 @@
-all:obj-test
-obj-test:*.c test/test2.c
-	gcc -Wall -g *.c test/test2.c -o obj-test
+all:obj debug
+
+obj:*.c testcases/test2.c
+	gcc -Wall -pthread *.c testcases/test2.c -o obj
+debug:*.c testcases/test2.c
+	gcc -Wall -g -pthread -D __STHREAD_DEBUG *.c testcases/test2.c -o debug
 clean:
-	rm obj-test
+	rm obj debug

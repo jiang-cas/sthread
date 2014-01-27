@@ -2,16 +2,12 @@
 #define MUTEX_H
 
 #include "task.h"
+#include "semaphore.h"
 
-struct mutex_struct
-{
-	char locked;
-	sthread_t *creator;
-};
 
 typedef struct sthread_mutex_t
 {
-	struct mutex_struct *mutex;
+	sem_t *mutex;
 } sthread_mutex_t;
 
 typedef struct sthread_mutexattr_t

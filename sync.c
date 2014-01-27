@@ -5,127 +5,101 @@
 #include "include/sync.h"
 #include "include/settings.h"
 #include "include/task.h"
+#include "include/semaphore.h"
 
-
-
-int commit_spin;
-int pull_spin;
-int barrier_spin;
-
-
-void __sigusr1_handler(int signo, siginfo_t *si, void *ucontext)
+/* the first task has semval == 1, others semval == 0 */
+void __init_sync_sem(void)
 {
-	if(si->si_code == SI_QUEUE) {
-		if(si->si_int == SIG_COMMIT) {
-			commit_spin = 0;
-		} else if(si->si_int == SIG_BARRIER) {
-			barrier_spin = 0;
+	if(__selftid == 0)
+		init_sem(__currenttask()->sync.commit_sem, 1);
+	else
+		init_sem(__currenttask()->sync.commit_sem, 0);
+
+	if(__selftid == __lasttask()->tid)
+		init_sem(__currenttask()->sync.pull_sem, 1);
+	else 
+		init_sem(__currenttask()->sync.pull_sem, 0);
+}
+
+void __wakeup_all(void)
+{
+	int i;
+	for(i=0;i<MAXTHREADS;i++)
+	{
+		if(__threadpool[i].inlist) {
+			v_sem(__threadpool[i].sync.pull_sem);
 		}
 	}
 }
 
-void __sigusr2_handler(int signo)
-{
-	pull_spin = 0;
-}
-
-
-void __arrived_syncpoint1(void)
-{
-	__currenttask()->syncpoint1 = 1;
-}
-int __has_arrived_syncpoint1(sthread_t *task)
-{
-	return task->syncpoint1;	
-}
-void __arrived_syncpoint2(void)
-{
-	__currenttask()->syncpoint2 = 1;
-}
-int __all_have_arrived_syncpoint2()
-{
-	sthread_t *t = __threadlist;
-	while(t->next)
-	{
-		if(t->syncpoint2 == 0)return 0;
-	}
-	return 1;
-}
-void __init_syncpoints(void)
-{
-	__currenttask()->syncpoint1 = 0;
-	__currenttask()->syncpoint2 = 0;
-}
+#define SYNC_STATE(x) ((x)->sync.sync_state)
 
 void sthread_sync(int type, void *item)
 {
-	int ret;
-	union sigval value;
-	sthread_t *nexttask;
+
+	SYNC_STATE(__currenttask()) = SYNC_IN;
+
+	if(type == SIG_NORMAL) {
+		while(!__pre_have_committed_or_suspended());
+		/* all tasks before have committed */
+		__mvspace_commit();
+		SYNC_STATE(__currenttask()) = SYNC_COMMITTED;
+		while(!__all_have_committed());
+		__mvspace_pull();
+		SYNC_STATE(__currenttask()) = SYNC_OUT;
+	}	
 
 	
-	__init_syncpoints();
+/*	if(type == SIG_MUTEX_LOCK && item) {
+		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
+		while(!__pre_have_committed_or_suspended());
+		__mvspace_commit();
+		while(1) {
+			if(__pre_have_committed()) {
+				__get_the_lock();
+				SYNC_STATE(__currenttask()) = SYNC_COMMITTED;
+			} else {
+				SYNC_STATE(__currenttask()) = SYNC_SUSPENDED;
+				__get_the_lock();
+			}
+		}
 
-	/* if it is the main thread, go on committing */
-	if(__selftid == 0) commit_spin = 0;
-	else commit_spin = 1;
 
-	while(commit_spin) {
-		pause();
+		if(read_sem(mutex->mutex) == 0 && read_sem(__currenttask()->sync.commit_sem) == 0) {
+			if(__nexttask(__currenttask()))
+				v_sem(__nexttask(__currenttask())->sync.commit_sem);
+		} else {
+			p_sem(__currenttask()->sync.commit_sem);
+			p_sem(mutex->mutex);
+			__mvspace_commit();
+			if(__nexttask(__currenttask()))
+				v_sem(__nexttask(__currenttask())->sync.commit_sem);
+		}
 	}
 
-	__debug_print("tid %d , sync1\n", __selftid);	
-	
-	__mvspace_commit();
+	if(type == SIG_NORMAL) {
+		p_sem(__currenttask()->sync.commit_sem);
+		__mvspace_commit();
+		if(__nexttask(__currenttask()))
+			v_sem(__nexttask(__currenttask())->sync.commit_sem);
+	}
 
-/* some cases here */
+*/	/* the threads reach this point inorder, so that they can ask for the lock inorder */
+/*	if(type == SIG_MUTEX_LOCK && item) {
+		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
+		p_sem(mutex->mutex);
+		if(__nexttask(__currenttask()))
+			v_sem(__nexttask(__currenttask())->sync.commit_sem);
+	}
 	if(type == SIG_MUTEX_UNLOCK && item) {
 		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
-		mutex->mutex->locked = 0;
+		v_sem(mutex->mutex);
 	}
-	if(type == SIG_MUTEX_LOCK && item) {
-		sthread_mutex_t *mutex = (sthread_mutex_t *)item;
-		__debug_print("tid %d before lock\n", __selftid);
-		while(!(__sync_val_compare_and_swap(&(mutex->mutex->locked), 0, 1) == 0)) {
-			/* this pause will answer to the sigusr1 sent by previous mutex_unlock, the sighanlder doesn't matter */
-			__debug_print("tid %d remove task %p \n", __selftid, __currenttask());
-			__removetask(__currenttask());
-			pause();
-		}
-		__debug_print("tid %d got lock\n", __selftid);
-	}
-
-	__arrived_syncpoint1();
-
-
-	/*notify the next task to commit */
-	value.sival_int = SIG_COMMIT;
-	/* chances are that a thread signals next, but the next thread hasn't reach pause, how to fix it ?? */
-
-	nexttask = __nexttask(__currenttask());
-	__debug_print("tid %d sync2 next task %d\n", __selftid, nexttask->tid);
-	if(nexttask) {
-		while(!__has_arrived_syncpoint1(__nexttask(__currenttask()))) {
-
-			//__debug_print("next pid %d \n", __nexttask(__currenttask())->pid);
-			ret = sigqueue(__nexttask(__currenttask())->pid, SIGUSR1, value);
-			if(ret) 
-				perror("sigqueue");
-
-		}
-	//__debug_print("tid %d , sync2   next tid %d\n", __selftid, nexttask->tid);	
-	}
-	__debug_print("tid %d , sync3 %d\n", __selftid);	
-
-
-
-	if(type == SIG_BARRIER && item) {
+*/	/*if(type == SIG_BARRIER && item) {
 		sthread_barrier_t *barrier = (sthread_barrier_t *)item;
 		barrier_spin = 1;
-		/* when the count is reach, notify all threads with SIG_BARRIER, so that it'll only work in the barrier spin loop */
 		if(__sync_add_and_fetch(&(barrier->barrier->count), 1) == barrier->totalcount) {
 			value.sival_int = SIG_BARRIER;
-			/* chances are that a thread signals next, but the next thread hasn't reach pause, how to fix it ?? */
 			ret = sigqueue(__nexttask(__currenttask())->pid, SIGUSR1, value);
 			if(ret) 
 				perror("sigqueue");
@@ -135,42 +109,24 @@ void sthread_sync(int type, void *item)
 				pause();
 			}
 		}
-		
-	}
+	}*/
 
+/*	__DEBUG_PRINT(("tid %d , sync3\n", __selftid));	
 
+	p_sem(__currenttask()->sync.pull_sem);
 
-		//__debug_print("sync2.5   current == last %d\n", __currenttask() == (*__lasttask));	
-	pull_spin = 1;
-	__debug_print("tid %d  sync4 \n", __selftid);	
-	while(pull_spin) {
-		if(__currenttask() == (*__lasttask)) {
-
-			//__debug_print("sync3   current == last %d\n", __currenttask() == (*__lasttask));	
-			/* notify all process in the group to pull */
-			value.sival_int = SIG_PULL;
-			/* same problem, even probably, because all threads in the group are notified, how to fix it ?? */
-			while(!__all_have_arrived_syncpoint2()) {
-				/* sigqueue cannot send to a process group.... */
-				ret = kill(0, SIGUSR2);
-				if(ret) 
-					perror("kill");
-			}
-			break;
-		}
-	}
-	//__debug_print("sync4   current == last %d\n", __currenttask() == (*__lasttask));	
-	__arrived_syncpoint2();
-	__debug_print("tid %d , sync5\n", __selftid);	
+	if(__selftid == __lasttask()->tid)
+		__wakeup_all();
+	
+	__DEBUG_PRINT(("tid %d , sync5\n", __selftid));	
 
 	__mvspace_pull();
+*/
 }
 
 int sync_mutex_lock(sthread_mutex_t *mutex)
 {
-	__debug_print("enter lock\n");
 	if(mutex->mutex) {
-		__debug_print("enter mutex lock\n");
 		sthread_sync(SIG_MUTEX_LOCK, mutex);
 		return 0;
 	}

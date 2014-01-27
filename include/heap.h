@@ -3,7 +3,7 @@
 
 #include "malloc.h"
 
-struct __mvheap
+struct heap_struct
 {
 	void *privatebase;
 	mspace privatemsp;

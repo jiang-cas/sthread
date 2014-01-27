@@ -3,7 +3,13 @@
 
 #include <stdio.h>
 #include "heap.h"
+#include <semaphore.h>
 
+struct sync_struct
+{
+	sem_t *commit_sem;
+	sem_t *pull_sem;
+};
 
 
 typedef struct sthread_t
@@ -11,11 +17,9 @@ typedef struct sthread_t
 	unsigned int tid;
 	void *retval;
 	int pid;
-	struct __mvheap heap_struct;
-	int syncpoint1;
-	int syncpoint2;
-	struct sthread_t *next;
-	struct sthread_t *pre;
+	struct heap_struct heap;
+	struct sync_struct sync;
+	int inlist;
 } sthread_t;
 
 typedef struct sthread_attr_t 
@@ -37,10 +41,10 @@ void __init_threadpool(void);
 void *__start_routine(void *arw);
 void __init_threadlist(void);
 void __addtask(sthread_t *task);
-void __removetask(sthread_t *task);
 sthread_t *__nexttask(sthread_t *task);
 sthread_t *__pretask(sthread_t *task);
 sthread_t *__currenttask(void);
+sthread_t *__lasttask(void);
 
 
 __attribute__((constructor)) void init();
