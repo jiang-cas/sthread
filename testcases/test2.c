@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <sys/mman.h>
 //#include "geap.h"
-#define N 4
+#define N 10
 
 #define LOG(x) printf("res %d \n", x)
 
 int *a;
-sthread_mutex_t mutex;
+//sthread_mutex_t mutex;
 //int a[N] __attribute__ ((aligned(4096)));
 
 void *func(void *args)
@@ -17,13 +17,13 @@ void *func(void *args)
 	int j;
 	//	a[i] = i;
 //	printf("thread %d before assignment\n", i);
-	sthread_mutex_lock(&mutex);
+//	sthread_mutex_lock(&mutex);
 
-	printf("thread %d getlock\n", i);
+//	printf("thread %d getlock\n", i);
 	for(j=0;j<N;j++)
 		a[j] = i + j;
-	sthread_mutex_unlock(&mutex);
-	printf("thread %d unlock\n", i);
+//	sthread_mutex_unlock(&mutex);
+//	printf("thread %d unlock\n", i);
 //	printf("thread %d finish assignment\n", i);
 //	geap_commit(a, a+sizeof(int)*N);
 //	geap_push(a, a+sizeof(int)*N);
@@ -41,7 +41,7 @@ int main()
 	a = mvshared_malloc(sizeof(int)*N);
 
 
-	sthread_mutex_init(&mutex, NULL);
+//	sthread_mutex_init(&mutex, NULL);
 //	a = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
 //	geap_set_flag();
 //	for(i=0;i<N;i++) 
@@ -50,7 +50,7 @@ int main()
 	for(i=0;i<N;i++)
 		ret = sthread_create(&newthread[i], NULL, func, (void *)i);
 
-	sthread_register(N);
+	sthread_main_wait(N);
 	printf("main 1111111\n");
 //	wait(NULL);	
 
@@ -65,7 +65,7 @@ int main()
 	printf("\n");
 
 	mvshared_free(a);
-	sthread_mutex_destroy(&mutex);
+	//sthread_mutex_destroy(&mutex);
 
 	return 0;
 }

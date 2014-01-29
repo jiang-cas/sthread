@@ -10,7 +10,8 @@ extern unsigned int __localtid;
 extern unsigned int __selftid;
 
 extern sthread_t *__threadpool;
-extern unsigned int *__registeredcount;
+extern struct counter_struct __registered;
+extern struct wait_queue __common_waits;
 
 
 

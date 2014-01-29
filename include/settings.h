@@ -11,6 +11,15 @@
 #define MAXTHREADS 32
 #define BLOCKSIZE 1024*1024
 
+#define E_NORMAL 0
+#define E_MUTEX 1
+#define E_BARRIER 2
+#define E_NONE 3
+
+typedef unsigned char bool;
+#define true 1
+#define false 0
+
 
 #endif
 

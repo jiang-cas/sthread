@@ -1,5 +1,7 @@
 #include "include/barrier.h"
 #include "include/sync.h"
+#include "include/globals.h"
+
 
 
 int sthread_barrier_init(sthread_barrier_t *barrier, const sthread_barrierattr_t *attr, unsigned count)
