@@ -57,7 +57,9 @@ void v_next_wait(struct wait_queue *waits)
 		}
 	}
 	/*it is the last task in the waitqueue */
+	waits->inited = 0;	
 	v_sem(waits->barrier);
+	
 }
 
 void del_wait_queue(struct wait_queue *waits) 

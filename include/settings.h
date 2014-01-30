@@ -15,6 +15,8 @@
 #define E_MUTEX 1
 #define E_BARRIER 2
 #define E_NONE 3
+#define SIG_JOIN 4
+#define SIG_EXIT 5
 
 typedef unsigned char bool;
 #define true 1
