@@ -8,12 +8,16 @@
 #include "include/semaphore.h"
 
 
-void sthread_sync(int type, void *item)
+void sthread_sync_normal(void)
 {
-	init_common_wait_queue(&__common_waits, type);
-	p_wait_self(&__common_waits);
+	while(!(*(__synced.synced)));
+	init_common_wait_queue(__common_waits.wq, E_NORMAL);
+	__DEBUG_PRINT(("tid %d sync1\n", __selftid));
+	p_wait_self(__common_waits.wq);
+	__DEBUG_PRINT(("tid %d sync2\n", __selftid));
 	__mvspace_commit();
-	v_next_wait(&__common_waits);
+	v_next_wait(__common_waits.wq);
+	__DEBUG_PRINT(("tid %d sync3\n", __selftid));
 	__mvspace_pull();
 }
 

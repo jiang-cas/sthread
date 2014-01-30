@@ -14,6 +14,17 @@ struct counter_struct
 
 void add_registered_count(struct counter_struct *cs);
 
+struct wait_queue_struct 
+{
+	struct wait_queue *wq;
+};
+
+struct synchronized_struct
+{
+	int *synced;
+};
+
+
 typedef struct sthread_t
 {
 	unsigned int tid;
@@ -54,4 +65,6 @@ sthread_t sthread_self(void);
 
 void sthread_exit(void *value);
 int sthread_join(sthread_t thread, void **thread_return);
+
+void sthread_main_wait(int n);
 #endif

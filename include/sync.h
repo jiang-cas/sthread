@@ -6,7 +6,8 @@
 
 
 
-void sthread_sync(int type, void *item);
+void sthread_sync_normal(void);
+
 int sync_mutex_unlock(sthread_mutex_t *mutex);
 int sync_mutex_lock(sthread_mutex_t *mutex);
 int sync_barrier_wait(sthread_barrier_t *barrier);
