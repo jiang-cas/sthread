@@ -8,7 +8,7 @@
 #include "include/semaphore.h"
 
 
-void sthread_sync_normal(void)
+void sthread_sync_normal(int type)
 {
 	while(!(*(__synced.synced)));
 	init_common_wait_queue(__common_waits.wq, E_NORMAL);
@@ -16,6 +16,9 @@ void sthread_sync_normal(void)
 	p_wait_self(__common_waits.wq);
 	__DEBUG_PRINT(("tid %d sync2\n", __selftid));
 	__mvspace_commit();
+	if((type == SIG_JOIN) | (type == SIG_EXIT)) {
+		__threadpool[__selftid].state = E_NONE;
+	}
 	v_next_wait(__common_waits.wq);
 	__DEBUG_PRINT(("tid %d sync3\n", __selftid));
 	__mvspace_pull();

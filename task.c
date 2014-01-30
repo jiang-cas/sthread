@@ -220,17 +220,18 @@ sthread_t sthread_self(void)
 
 void sthread_exit(void *value)
 {
-	sthread_sync_normal();
+	sthread_sync_normal(SIG_EXIT);
 	__threadpool[__localtid].retval = value;
-	__threadpool[__selftid].state = E_NONE;
 	exit(0);
 }
 
 int sthread_join(sthread_t thread, void **thread_return)
 {
-	sthread_sync_normal();
-	__threadpool[__selftid].state = E_NONE;
+	__DEBUG_PRINT(("tid %d wait to join thread %d \n", __selftid, thread.tid));
+	sthread_sync_normal(SIG_JOIN);
+	
 	waitpid(thread.pid, NULL, 0);
+	__DEBUG_PRINT(("tid %d joined thread %d \n", __selftid, thread.tid));
 	__threadpool[__selftid].state = E_NORMAL;
 	if(thread_return)
 		*thread_return = __threadpool[thread.tid].retval;

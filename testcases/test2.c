@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/mman.h>
 //#include "geap.h"
-#define N 2
+#define N 10
 
 #define LOG(x) printf("res %d \n", x)
 
