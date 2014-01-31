@@ -10,5 +10,6 @@ unsigned int __selftid;
 
 /* all info about created threads*/
 sthread_t *__threadpool;
-unsigned int *__registeredcount;
-
+struct counter_struct __registered;
+struct wait_queue_struct __common_waits;
+struct synchronized_struct __synced;

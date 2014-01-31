@@ -7,6 +7,12 @@ sem_t *new_sem(void)
 	return (sem_t *)mvshared_malloc(sizeof(sem_t));
 }
 
+void free_sem(sem_t *sema)
+{
+	mvshared_free(sema);
+}
+
+
 int init_sem(sem_t *sema, int init_value)
 {
 	if(sem_init(sema, 1, init_value) < 0) {

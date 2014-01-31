@@ -5,10 +5,23 @@
 #include "heap.h"
 #include <semaphore.h>
 
-struct sync_struct
+
+struct counter_struct
 {
-	sem_t *commit_sem;
-	sem_t *pull_sem;
+	int *counts;
+};
+
+
+void add_registered_count(struct counter_struct *cs);
+
+struct wait_queue_struct 
+{
+	struct wait_queue *wq;
+};
+
+struct synchronized_struct
+{
+	int *synced;
 };
 
 
@@ -18,8 +31,7 @@ typedef struct sthread_t
 	void *retval;
 	int pid;
 	struct heap_struct heap;
-	struct sync_struct sync;
-	int inlist;
+	int state;
 } sthread_t;
 
 typedef struct sthread_attr_t 
@@ -53,4 +65,6 @@ sthread_t sthread_self(void);
 
 void sthread_exit(void *value);
 int sthread_join(sthread_t thread, void **thread_return);
+
+void sthread_main_wait(int n);
 #endif

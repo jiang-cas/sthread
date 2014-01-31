@@ -7,6 +7,8 @@
 
 sem_t *new_sem(void);
 
+void free_sem(sem_t *sema);
+
 int init_sem(sem_t *sema, int init_value);
 
 int del_sem(sem_t *sema);

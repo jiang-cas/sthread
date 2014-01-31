@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/mman.h>
 //#include "geap.h"
-#define N 4
+#define N 10
 
 #define LOG(x) printf("res %d \n", x)
 
@@ -20,10 +20,12 @@ void *func(void *args)
 	sthread_mutex_lock(&mutex);
 
 	printf("thread %d getlock\n", i);
+	fflush(stdout);
 	for(j=0;j<N;j++)
 		a[j] = i + j;
 	sthread_mutex_unlock(&mutex);
 	printf("thread %d unlock\n", i);
+	fflush(stdout);
 //	printf("thread %d finish assignment\n", i);
 //	geap_commit(a, a+sizeof(int)*N);
 //	geap_push(a, a+sizeof(int)*N);
@@ -50,7 +52,7 @@ int main()
 	for(i=0;i<N;i++)
 		ret = sthread_create(&newthread[i], NULL, func, (void *)i);
 
-	sthread_register(N);
+	sthread_main_wait(N);
 	printf("main 1111111\n");
 //	wait(NULL);	
 
