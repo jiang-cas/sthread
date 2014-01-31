@@ -138,6 +138,7 @@ void new_wait_queue_struct(struct wait_queue_struct *wqs)
 		waits->semaqueue[i] = new_sem();
 	}
 	waits->barrier = new_sem();
+	waits->p_barrier = new_sem();
 	waits->inited = 0;
 }
 void free_wait_queue_struct(struct wait_queue_struct *wqs)
@@ -148,6 +149,7 @@ void free_wait_queue_struct(struct wait_queue_struct *wqs)
 		free_sem(waits->semaqueue[i]);
 	}
 	free_sem(waits->barrier);
+	free_sem(waits->p_barrier);
 	mvshared_free(wqs->wq);
 }
 
@@ -161,7 +163,8 @@ void __init_shared_globals(void)
 	*(__synced.synced) = 0;
 }
 
-/* initial sthreads */
+
+
 __attribute__((constructor)) void init()
 {
 	/* prepared for next thread, and now __selftid is 0 */
@@ -227,11 +230,14 @@ void sthread_exit(void *value)
 
 int sthread_join(sthread_t thread, void **thread_return)
 {
-	__DEBUG_PRINT(("tid %d wait to join thread %d \n", __selftid, thread.tid));
+	int ret;
 	sthread_sync_normal(SIG_JOIN);
 	
-	waitpid(thread.pid, NULL, 0);
-	__DEBUG_PRINT(("tid %d joined thread %d \n", __selftid, thread.tid));
+	thread = __threadpool[thread.tid];
+	__DEBUG_PRINT(("tid %d wait to join thread %d \n", __selftid, thread.tid));	
+	ret = waitpid(thread.pid, NULL, 0);
+	__DEBUG_PRINT(("tid %d has joined thread %d ret %d\n", __selftid, thread.tid, ret));	
+
 	__threadpool[__selftid].state = E_NORMAL;
 	if(thread_return)
 		*thread_return = __threadpool[thread.tid].retval;

@@ -2,6 +2,8 @@
 #define GLOABALS_H
 
 #include "types.h"
+#include <semaphore.h>
+#include <sys/types.h>
 
 
 extern void *__privatebase;

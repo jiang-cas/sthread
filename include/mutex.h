@@ -3,11 +3,18 @@
 
 #include "task.h"
 #include "semaphore.h"
+#include "equeue.h"
 
+
+struct mutex_struct
+{
+	struct wait_queue *wq;
+	sem_t *locked;
+};
 
 typedef struct sthread_mutex_t
 {
-	sem_t *mutex;
+	struct mutex_struct *mutex;
 } sthread_mutex_t;
 
 typedef struct sthread_mutexattr_t
