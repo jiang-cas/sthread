@@ -1,6 +1,14 @@
 #include "include/equeue.h"
 #include "include/globals.h"
 
+void __init_arrived_waitqueue(struct wait_queue *waits)
+{
+	int i;
+	for(i=0;i<MAXTHREADS;i++) {
+		waits->arrived[i] = 0;
+	}
+}
+
 void init_common_wait_queue(struct wait_queue *waits, int type) {
 	int i;
 	if(!__sync_val_compare_and_swap(&waits->inited, 0 ,1)) {
@@ -15,6 +23,7 @@ void init_common_wait_queue(struct wait_queue *waits, int type) {
 					waits->waitqueue[i] = false;
 				}
 				init_sem(waits->semaqueue[i], 0);
+				waits->arrived[i] = 0;
 			}
 		} else {
 			for(i=0;i<MAXTHREADS;i++) {
@@ -25,6 +34,7 @@ void init_common_wait_queue(struct wait_queue *waits, int type) {
 					waits->waitqueue[i] = false;
 				}
 				init_sem(waits->semaqueue[i], 0);
+				waits->arrived[i] = 0;
 			}
 		}
 		/* the first task in the waitlist get the sem first */
@@ -36,6 +46,7 @@ void init_common_wait_queue(struct wait_queue *waits, int type) {
 		}
 		init_sem(waits->barrier, 0);
 		init_sem(waits->p_barrier, 0);
+		__init_arrived_waitqueue(waits);
 		
 	}
 	
@@ -44,6 +55,7 @@ void init_common_wait_queue(struct wait_queue *waits, int type) {
 		__DEBUG_PRINT(("%d ", waits->waitqueue[i]));
 	__DEBUG_PRINT(("\n"));*/
 }
+
 
 void init_special_wait_queue(struct wait_queue *waits, int type) {
 	int i;
@@ -56,6 +68,7 @@ void init_special_wait_queue(struct wait_queue *waits, int type) {
 				waits->waitqueue[i] = false;
 			}
 			init_sem(waits->semaqueue[i], 0);
+			waits->arrived[i] = 0;
 		}
 		/* the first task in the waitlist get the sem first */
 		for(i=0;i<MAXTHREADS;i++) {
@@ -74,8 +87,8 @@ void init_special_wait_queue(struct wait_queue *waits, int type) {
 }
 void p_wait_self(struct wait_queue *waits) {
 	__sync_fetch_and_add(&(waits->p_count), 1);
-	__DEBUG_PRINT(("p_wait\n"));
-	__DEBUG_PRINT(("wait on p total %d, p_count %d\n", waits->total, waits->p_count));
+//	__DEBUG_PRINT(("p_wait\n"));
+//	__DEBUG_PRINT(("wait on p total %d, p_count %d\n", waits->total, waits->p_count));
 	if(waits->p_count == waits->total) {
 		waits->inited = 0;
 		v_sem(waits->p_barrier);
@@ -85,14 +98,25 @@ void p_wait_self(struct wait_queue *waits) {
 
 void wait_on_p(struct wait_queue *waits)
 {
-	__DEBUG_PRINT(("wait on p\n"));
-	__DEBUG_PRINT(("wait on p total %d, p_count %d\n", waits->total, waits->p_count));
+//	__DEBUG_PRINT(("wait on p\n"));
+//	__DEBUG_PRINT(("wait on p total %d, p_count %d\n", waits->total, waits->p_count));
 	if(waits->p_count == waits->total) {
 		waits->inited = 0;
 		v_sem(waits->p_barrier);
 	}
 	p_sem(waits->p_barrier);
 	v_sem(waits->p_barrier);
+}
+
+void spin_on_normal(struct wait_queue *wq)
+{
+	int i;
+	wq->arrived[__selftid] = 1;
+	for(i=0;i<MAXTHREADS;i++) {
+		while((__threadpool[i].state != E_NONE) && !(wq->arrived[i])) {
+//		__DEBUG_PRINT(("tid %d spin task %d \n", __selftid, i));
+	}
+	}
 }
 
 void v_next_wait(struct wait_queue *waits) 
