@@ -9,6 +9,7 @@ struct wait_queue
 {
 	bool waitqueue[MAXTHREADS];
 	sem_t *semaqueue[MAXTHREADS];
+	bool arrived[MAXTHREADS];
 	sem_t *barrier;
 	int inited;
 	sem_t *p_barrier;
@@ -21,10 +22,13 @@ void init_special_wait_queue(struct wait_queue *waits, int type);
 
 void p_wait_self(struct wait_queue *waits);
 void wait_on_p(struct wait_queue *waits);
+void spin_on_normal(struct wait_queue *waits);
 
 void v_next_wait(struct wait_queue *waits);
 void v_next_nowait(struct wait_queue *waits);
 
 void del_wait_queue(struct wait_queue *waits);
+
+void __init_arrived_waitqueue(struct wait_queue *waits);
 
 #endif
