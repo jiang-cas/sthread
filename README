@@ -5,5 +5,3 @@ Introduction:
 	This is a simple implementation of some essential Pthread interfaces in order to provide deterministic parallelism for Pthread applications. 
 	The library isolates the address spaces among the threads and uses some self-implemented syscalls to achieve synchronization efficiently and deterministically.
 
-
-develop branch
