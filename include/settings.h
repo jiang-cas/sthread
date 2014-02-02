@@ -23,6 +23,7 @@ typedef unsigned char bool;
 #define SIG_EXIT 7
 #define SIG_MUTEX_LOCK 8
 #define SIG_MUTEX_UNLOCK 9
+#define SIG_BARRIER 10
 
 
 
