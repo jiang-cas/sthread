@@ -14,8 +14,6 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 		for(i=0;i<MAXTHREADS;i++) {
 			mutex->mutex->wq->semaqueue[i] = new_sem();
 		}
-		mutex->mutex->wq->barrier = new_sem();
-		mutex->mutex->wq->p_barrier = new_sem();
 		mutex->mutex->wq->inited = 0;
 		init_sem(mutex->mutex->locked, 1);
 		return 0;
@@ -30,8 +28,6 @@ int sthread_mutex_destroy(sthread_mutex_t *mutex)
 		for(i=0;i<MAXTHREADS;i++) {
 			free_sem(mutex->mutex->wq->semaqueue[i]);
 		}
-		free_sem(mutex->mutex->wq->barrier);
-		free_sem(mutex->mutex->wq->p_barrier);
 		mvshared_free(mutex->mutex->wq);
 		free_sem(mutex->mutex->locked);
 		mvshared_free(mutex->mutex);

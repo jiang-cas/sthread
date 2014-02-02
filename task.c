@@ -137,8 +137,6 @@ void new_wait_queue_struct(struct wait_queue_struct *wqs)
 	for(i=0;i<MAXTHREADS;i++) {
 		waits->semaqueue[i] = new_sem();
 	}
-	waits->barrier = new_sem();
-	waits->p_barrier = new_sem();
 	waits->inited = 0;
 }
 void free_wait_queue_struct(struct wait_queue_struct *wqs)
@@ -148,8 +146,6 @@ void free_wait_queue_struct(struct wait_queue_struct *wqs)
 	for(i=0;i<MAXTHREADS;i++) {
 		free_sem(waits->semaqueue[i]);
 	}
-	free_sem(waits->barrier);
-	free_sem(waits->p_barrier);
 	mvshared_free(wqs->wq);
 }
 
@@ -248,6 +244,6 @@ int sthread_join(sthread_t thread, void **thread_return)
 void sthread_main_wait(int n)
 {
 	while(*(__registered.counts) != n);
-	init_common_wait_queue(__common_waits.wq, E_NORMAL);
+	__init_common_wait_queue(__common_waits.wq);
 	*(__synced.synced) = 1;
 }
