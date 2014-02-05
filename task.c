@@ -28,7 +28,7 @@ void *__alloc_stack(unsigned int size)
 }
 void add_registered_count(struct counter_struct *cs)
 {
-	(*(cs->counts))++;
+	(*(cs->val))++;
 }
 
 void __init_localtid(void)
@@ -48,6 +48,11 @@ void __addtask(sthread_t *task)
 {
 	task->state = E_NORMAL;
 	add_registered_count(&__registered);
+}
+
+sthread_t *__currenttask(void)
+{
+	return &__threadpool[__selftid];
 }
 
 
@@ -77,89 +82,30 @@ void *__start_routine(void *arw)
 void __init_threadlist(void)
 {
 	int i;
+	for(i=0;i<MAXTHREADS;i++) {
+		__threadpool[i].state = E_NONE;
+		__threadpool[i].leaved = 1;
+		__threadpool[i].lock1 = new_sem();
+	}
 	__threadpool[0].state = E_NORMAL;
 	__threadpool[0].tid = 0;
-	for(i=1;i<MAXTHREADS;i++) {
-		__threadpool[i].state = E_NONE;
-	}
-}
-
-/* functions for iteration on the task list */
-sthread_t *__nexttask(sthread_t *task)
-{
-	int i;
-	for(i=task->tid + 1;i<MAXTHREADS;i++) {
-		if(__threadpool[i].state != E_NONE)
-			return &__threadpool[i];	
-	}
-	return NULL;
-}
-
-sthread_t *__pretask(sthread_t *task)
-{
-	int i;
-	for(i=task->tid - 1; i>=0; i--) {
-		if(__threadpool[i].state != E_NONE)
-			return &__threadpool[i];	
-	}
-	return NULL;
-}
-
-sthread_t *__currenttask(void)
-{
-	return &__threadpool[__selftid];
-}
-
-sthread_t *__lasttask(void)
-{
-	int i;
-	for(i=MAXTHREADS;i>=0;i--) {
-		if(__threadpool[i].state != E_NONE) return &__threadpool[i];
-	}
-	return &__threadpool[0];
-}
-
-/* constructor & destructor of thread_counts and wait queue */
-void new_counter_struct(struct counter_struct *cs)
-{
-	cs->counts = mvshared_malloc(sizeof(int));
-}
-void free_counter_struct(struct counter_struct *cs)
-{
-	mvshared_free(cs->counts);
-}
-void new_wait_queue_struct(struct wait_queue_struct *wqs)
-{
-	int i;
-	struct wait_queue *waits;
-	wqs->wq = (struct wait_queue *)mvshared_malloc(sizeof(struct wait_queue));
-	waits = wqs->wq;
-	for(i=0;i<MAXTHREADS;i++) {
-		waits->semaqueue[i] = new_sem();
-	}
-	waits->inited = 0;
-}
-void free_wait_queue_struct(struct wait_queue_struct *wqs)
-{
-	int i;
-	struct wait_queue *waits = wqs->wq;
-	for(i=0;i<MAXTHREADS;i++) {
-		free_sem(waits->semaqueue[i]);
-	}
-	mvshared_free(wqs->wq);
 }
 
 /* allocate the counter of threads_number and initialize it into 0 */
 void __init_shared_globals(void)
 {
-	new_counter_struct(&__registered);
-	new_wait_queue_struct(&__common_waits);
-	*(__registered.counts) = 0;
-	__synced.synced = mvshared_malloc(sizeof(int));
-	*(__synced.synced) = 0;
+	__registered.val = mvshared_malloc(sizeof(int));
+	*(__registered.val) = 0;
+
+	__initsync.val = mvshared_malloc(sizeof(int));
+	*(__initsync.val) = 0;
+
+	__synced.val = mvshared_malloc(sizeof(int));
+	*(__synced.val) = 0;
+
+	__global_barrier1.barrier = new_sem();
+	init_sem(__global_barrier1.barrier, 0);
 }
-
-
 
 __attribute__((constructor)) void init()
 {
@@ -219,31 +165,49 @@ sthread_t sthread_self(void)
 
 void sthread_exit(void *value)
 {
-	sthread_sync_normal(SIG_EXIT);
-	__threadpool[__localtid].retval = value;
+	setup_sync();
+	__DEBUG_PRINT(("tid %d exit0 \n", __selftid));
+	p_sem(__threadpool[__selftid].lock1);
+	
+	__mvspace_commit();
+	__threadpool[__selftid].retval = value;
+	__threadpool[__selftid].state = E_NONE;
+	__DEBUG_PRINT(("tid %d exit2 \n", __selftid));
+
+	v_next_and_wait();
+	__DEBUG_PRINT(("tid %d exit3 \n", __selftid));
 	exit(0);
 }
 
 int sthread_join(sthread_t thread, void **thread_return)
 {
-	int ret;
-	sthread_sync_normal(SIG_JOIN);
-	
+	setup_sync();
+	__DEBUG_PRINT(("tid %d join0 \n", __selftid));
+	p_sem(__threadpool[__selftid].lock1);
+		
+	__mvspace_commit();
+	__threadpool[__selftid].state = E_STOPPED;
 	thread = __threadpool[thread.tid];
-	__DEBUG_PRINT(("tid %d wait to join thread %d \n", __selftid, thread.tid));	
-	ret = waitpid(thread.pid, NULL, 0);
-	__DEBUG_PRINT(("tid %d has joined thread %d ret %d\n", __selftid, thread.tid, ret));	
+	
+	__DEBUG_PRINT(("tid %d join1 \n", __selftid));
+
+	v_next_and_wait();
+	__DEBUG_PRINT(("tid %d join2 \n", __selftid));
+
+	waitpid(thread.pid, NULL, 0);
+	__DEBUG_PRINT(("tid %d join3 \n", __selftid));
 
 	__threadpool[__selftid].state = E_NORMAL;
 	if(thread_return)
 		*thread_return = __threadpool[thread.tid].retval;
+
+	leave_sync();
 	return 0;
 }
 
 /* main thread wait for all threads have been created and setup the wait queue */
 void sthread_main_wait(int n)
 {
-	while(*(__registered.counts) != n);
-	__init_common_wait_queue(__common_waits.wq);
-	*(__synced.synced) = 1;
+	while(*(__registered.val) != n);
+	*(__synced.val) = 1;
 }

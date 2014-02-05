@@ -19,6 +19,7 @@ typedef unsigned char bool;
 #define E_MUTEX 3
 #define E_BARRIER 4
 #define E_NONE 5
+#define E_STOPPED 11
 #define SIG_JOIN 6
 #define SIG_EXIT 7
 #define SIG_MUTEX_LOCK 8

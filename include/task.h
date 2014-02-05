@@ -8,20 +8,12 @@
 
 struct counter_struct
 {
-	int *counts;
+	int *val;
 };
 
-
-void add_registered_count(struct counter_struct *cs);
-
-struct wait_queue_struct 
+struct barrier_struct
 {
-	struct wait_queue *wq;
-};
-
-struct synchronized_struct
-{
-	int *synced;
+	sem_t *barrier;
 };
 
 
@@ -32,6 +24,9 @@ typedef struct sthread_t
 	int pid;
 	struct heap_struct heap;
 	int state;
+	sem_t *lock1;
+	int leaved;
+	
 } sthread_t;
 
 typedef struct sthread_attr_t 
