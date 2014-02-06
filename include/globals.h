@@ -15,7 +15,8 @@ extern sthread_t *__threadpool;
 extern struct counter_struct __registered;
 extern struct counter_struct __initsync;
 extern struct counter_struct __synced;
-extern struct barrier_struct __global_barrier1;
+extern struct counter_struct __global_barrier1;
+extern struct counter_struct __semkey;
 
 
 

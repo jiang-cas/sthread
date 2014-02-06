@@ -4,7 +4,6 @@
 #include "include/sync.h"
 #include "include/mvspace.h"
 #include "include/semaphore.h"
-#include "include/equeue.h"
 #include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,8 +102,12 @@ void __init_shared_globals(void)
 	__synced.val = mvshared_malloc(sizeof(int));
 	*(__synced.val) = 0;
 
-	__global_barrier1.barrier = new_sem();
-	init_sem(__global_barrier1.barrier, 0);
+	__semkey.val = mvshared_malloc(sizeof(int));
+	*(__semkey.val) = SEM_KEY_START;
+
+	__global_barrier1.val = mvshared_malloc(sizeof(int));
+	*(__global_barrier1.val) = new_sem();
+
 }
 
 __attribute__((constructor)) void init()
@@ -167,7 +170,7 @@ void sthread_exit(void *value)
 {
 	setup_sync();
 	__DEBUG_PRINT(("tid %d exit0 \n", __selftid));
-	p_sem(__threadpool[__selftid].lock1);
+	wait_sem(__threadpool[__selftid].lock1);
 	
 	__mvspace_commit();
 	__threadpool[__selftid].retval = value;
@@ -183,7 +186,7 @@ int sthread_join(sthread_t thread, void **thread_return)
 {
 	setup_sync();
 	__DEBUG_PRINT(("tid %d join0 \n", __selftid));
-	p_sem(__threadpool[__selftid].lock1);
+	wait_sem(__threadpool[__selftid].lock1);
 		
 	__mvspace_commit();
 	__threadpool[__selftid].state = E_STOPPED;

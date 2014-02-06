@@ -26,7 +26,7 @@ typedef unsigned char bool;
 #define SIG_MUTEX_UNLOCK 9
 #define SIG_BARRIER 10
 
-
+#define SEM_KEY_START 6666
 
 #endif
 

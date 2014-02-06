@@ -3,7 +3,6 @@
 
 #include "heap.h"
 #include "task.h"
-#include "equeue.h"
 
 
 

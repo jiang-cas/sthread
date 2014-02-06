@@ -1,23 +1,23 @@
 #ifndef SEM_H
 #define SEM_H
 
-#include <semaphore.h>
 #include <sys/types.h>
+#include <sys/sem.h>
+#include <unistd.h>
+#include <stdlib.h>
 
+union semun
+{
+	int val;
+	struct semid_ds *buf;
+	unsigned short *array;
+};
 
-sem_t *new_sem(void);
-
-void free_sem(sem_t *sema);
-
-int init_sem(sem_t *sema, int init_value);
-
-int del_sem(sem_t *sema);
-
-int p_sem(sem_t *sema);
-
-int v_sem(sem_t *sema);
-
-int read_sem(sem_t *sema);
-
+int new_sem(void);
+int init_sem(int sem_id, int init_value);
+int del_sem(int sem_id);
+int wait_sem(int sem_id);
+int post_sem(int sem_id);
+int post_multiple_sem(int sem_id, int n);
 
 #endif

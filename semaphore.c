@@ -1,58 +1,71 @@
 #include "include/semaphore.h"
 #include "include/heap.h"
 #include <stdio.h>
+#include "include/globals.h"
 
-sem_t *new_sem(void)
+int new_sem(void)
 {
-	return (sem_t *)mvshared_malloc(sizeof(sem_t));
+	return semget((*(__semkey.val))++, 1, IPC_CREAT | 0666);
 }
 
-void free_sem(sem_t *sema)
+int init_sem(int sem_id, int init_value)
 {
-	mvshared_free(sema);
-}
-
-
-int init_sem(sem_t *sema, int init_value)
-{
-	if(sem_init(sema, 1, init_value) < 0) {
-		perror("sem init");
+	union semun sem_union;
+	sem_union.val = init_value;
+	if(semctl(sem_id, 0, SETVAL, sem_union) == -1) {
+		perror("Initialize semaphore");
 		return -1;
 	}
 	return 0;
 }
 
-int del_sem(sem_t *sema)
+int del_Sem(int sem_id)
 {
-	if(sem_destroy(sema) < 0) {
-		perror("delete semaphore");
+	union semun sem_union;
+	if(semctl(sem_id, 0, IPC_RMID, sem_union) == -1) {
+		perror("Delete semaphore");
 		return -1;
 	}
 	return 0;
 }
 
-int read_sem(sem_t *sema)
+int wait_sem(int sem_id)
 {
-	int value;
-	sem_getvalue(sema, &value);
-	return value;
-}
-
-int p_sem(sem_t *sema)
-{
-	if(sem_wait(sema) < 0) {
-		perror("P semaphore");
+	struct sembuf sem_b;
+	sem_b.sem_num = 0;
+	sem_b.sem_op = -1;
+	sem_b.sem_flg = SEM_UNDO;
+	if(semop(sem_id, &sem_b, 1) == -1) {
+		perror("P operation");
 		return -1;
 	}
 	return 0;
 }
 
-int v_sem(sem_t *sema)
+int post_sem(int sem_id)
 {
-	if(sem_post(sema) < 0) {
-		perror("V semaphore");
+	struct sembuf sem_b;
+	sem_b.sem_num = 0;
+	sem_b.sem_op = 1;
+	sem_b.sem_flg = SEM_UNDO;
+
+	if(semop(sem_id, &sem_b, 1) == -1) {
+		perror("V ooperation");
 		return -1;
 	}
 	return 0;
 }
 
+int post_multiple_sem(int sem_id, int n)
+{
+	struct sembuf sem_b;
+	sem_b.sem_num = 0;
+	sem_b.sem_op = n;
+	sem_b.sem_flg = SEM_UNDO;
+
+	if(semop(sem_id, &sem_b, 1) == -1) {
+		perror("V ooperation");
+		return -1;
+	}
+	return 0;
+}

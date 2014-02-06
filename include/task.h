@@ -11,12 +11,6 @@ struct counter_struct
 	int *val;
 };
 
-struct barrier_struct
-{
-	sem_t *barrier;
-};
-
-
 typedef struct sthread_t
 {
 	unsigned int tid;
@@ -24,7 +18,7 @@ typedef struct sthread_t
 	int pid;
 	struct heap_struct heap;
 	int state;
-	sem_t *lock1;
+	int lock1;
 	int leaved;
 	
 } sthread_t;

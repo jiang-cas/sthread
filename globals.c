@@ -13,4 +13,5 @@ sthread_t *__threadpool;
 struct counter_struct __registered;
 struct counter_struct __initsync;
 struct counter_struct __synced;
-struct barrier_struct __global_barrier1;
+struct counter_struct __global_barrier1;
+struct counter_struct __semkey;
