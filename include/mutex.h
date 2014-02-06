@@ -1,0 +1,30 @@
+#ifndef MUTEX_H
+#define MUTEX_H
+
+#include "task.h"
+#include "semaphore.h"
+
+
+struct mutex_struct
+{
+	int lock;
+	int inited;
+};
+
+typedef struct sthread_mutex_t
+{
+	struct mutex_struct *mutex;
+} sthread_mutex_t;
+
+typedef struct sthread_mutexattr_t
+{} sthread_mutexattr_t;
+
+int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t *attr);
+
+int sthread_mutex_destroy(sthread_mutex_t *mutex);
+
+int sthread_mutex_lock(sthread_mutex_t *mutex);
+
+int sthread_mutex_unlock(sthread_mutex_t *mutex);
+
+#endif
