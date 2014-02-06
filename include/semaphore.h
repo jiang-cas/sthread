@@ -16,6 +16,7 @@ union semun
 int new_sem(void);
 int init_sem(int sem_id, int init_value);
 int del_sem(int sem_id);
+int read_sem(int sem_id);
 int wait_sem(int sem_id);
 int post_sem(int sem_id);
 int post_multiple_sem(int sem_id, int n);

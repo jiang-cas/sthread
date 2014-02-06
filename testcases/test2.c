@@ -7,7 +7,7 @@
 #define LOG(x) printf("res %d \n", x)
 
 int *a;
-//sthread_mutex_t mutex;
+sthread_mutex_t mutex;
 //int a[N] __attribute__ ((aligned(4096)));
 
 void *func(void *args)
@@ -17,13 +17,14 @@ void *func(void *args)
 	int j;
 	//	a[i] = i;
 //	printf("thread %d before assignment\n", i);
-//	sthread_mutex_lock(&mutex);
+	sthread_mutex_lock(&mutex);
 
 //	printf("thread %d getlock\n", i);
 //	fflush(stdout);
 	for(j=0;j<N;j++)
 		a[j] = i + j;
-//	sthread_mutex_unlock(&mutex);
+
+	sthread_mutex_unlock(&mutex);
 //	printf("thread %d unlock\n", i);
 //	fflush(stdout);
 //	printf("thread %d finish assignment\n", i);
@@ -43,7 +44,7 @@ int main()
 	a = mvshared_malloc(sizeof(int)*N);
 
 
-//	sthread_mutex_init(&mutex, NULL);
+	sthread_mutex_init(&mutex, NULL);
 //	a = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
 //	geap_set_flag();
 //	for(i=0;i<N;i++) 
@@ -67,7 +68,9 @@ int main()
 	printf("\n");
 
 	mvshared_free(a);
-//	sthread_mutex_destroy(&mutex);
+	sthread_mutex_destroy(&mutex);
+
+	sthread_return();
 
 	return 0;
 }

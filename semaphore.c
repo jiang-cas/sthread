@@ -18,8 +18,13 @@ int init_sem(int sem_id, int init_value)
 	}
 	return 0;
 }
+int read_sem(int sem_id)
+{
+	union semun sem_union;
+	return semctl(sem_id, 0, GETVAL, sem_union);
+}
 
-int del_Sem(int sem_id)
+int del_sem(int sem_id)
 {
 	union semun sem_union;
 	if(semctl(sem_id, 0, IPC_RMID, sem_union) == -1) {

@@ -19,6 +19,9 @@ typedef struct sthread_t
 	struct heap_struct heap;
 	int state;
 	int lock1;
+	int lock2;
+	int joinlock;
+	struct mutex_struct *mutex;
 	int leaved;
 	
 } sthread_t;
@@ -56,4 +59,5 @@ void sthread_exit(void *value);
 int sthread_join(sthread_t thread, void **thread_return);
 
 void sthread_main_wait(int n);
+void sthread_return(void);
 #endif

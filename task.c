@@ -85,6 +85,10 @@ void __init_threadlist(void)
 		__threadpool[i].state = E_NONE;
 		__threadpool[i].leaved = 1;
 		__threadpool[i].lock1 = new_sem();
+		__threadpool[i].lock2 = new_sem();
+		__threadpool[i].joinlock = new_sem();
+		init_sem(__threadpool[i].joinlock, 0);
+		__threadpool[i].mutex = 0;
 	}
 	__threadpool[0].state = E_NORMAL;
 	__threadpool[0].tid = 0;
@@ -179,7 +183,8 @@ void sthread_exit(void *value)
 
 	v_next_and_wait();
 	__DEBUG_PRINT(("tid %d exit3 \n", __selftid));
-	exit(0);
+	post_sem(__threadpool[__selftid].joinlock);
+	sleep(1);
 }
 
 int sthread_join(sthread_t thread, void **thread_return)
@@ -191,14 +196,13 @@ int sthread_join(sthread_t thread, void **thread_return)
 		
 	__mvspace_commit();
 	__threadpool[__selftid].state = E_STOPPED;
-	thread = __threadpool[thread.tid];
 	
 	__DEBUG_PRINT(("tid %d join1 \n", __selftid));
 
 	v_next_and_wait();
 	__DEBUG_PRINT(("tid %d join2 \n", __selftid));
 
-	waitpid(thread.pid, NULL, 0);
+	wait_sem(__threadpool[thread.tid].joinlock);
 	__DEBUG_PRINT(("tid %d join3 \n", __selftid));
 
 	__threadpool[__selftid].state = E_NORMAL;
@@ -214,4 +218,15 @@ void sthread_main_wait(int n)
 {
 	while(*(__registered.val) != n);
 	*(__synced.val) = 1;
+}
+
+void sthread_return(void)
+{
+	int i;
+	for(i=0;i<MAXTHREADS;i++) {
+		del_sem(__threadpool[i].lock1);
+		del_sem(__threadpool[i].lock2);
+		del_sem(__threadpool[i].joinlock);
+	}
+	del_sem(*(__global_barrier1.val));
 }
