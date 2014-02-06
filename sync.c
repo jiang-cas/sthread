@@ -22,6 +22,24 @@ void setup_sync(void)
 		}
 	}
 }
+/*
+void setup_mutex_sync(struct mutex_struct *mutex)
+{
+	if(__sync_val_compare_and_swap(&(mutex->inited), 0, 1) == 0) {
+		int i;
+		for(i=0;i<MAXTHREADS;i++) {
+			init_sem(__threadpool[i].lock2, 0);
+		}
+		for(i=0;i<MAXTHREADS;i++) {
+			if(__threadpool[i].mutex == mutex) {
+				post_sem(__threadpool[i].lock2);
+				break;
+			}
+		}
+	}
+	
+}
+*/
 
 void v_next_and_wait(void)
 {
@@ -43,3 +61,8 @@ void leave_sync(void)
 	(*__initsync.val) = 0;
 }
 
+void wait_to_enter(void)
+{
+	wait_sem(__threadpool[__selftid].lock1);
+	__threadpool[__selftid].leaved = 0;
+}

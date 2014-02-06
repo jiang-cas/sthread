@@ -170,8 +170,8 @@ void sthread_exit(void *value)
 {
 	setup_sync();
 	__DEBUG_PRINT(("tid %d exit0 \n", __selftid));
-	wait_sem(__threadpool[__selftid].lock1);
-	
+	wait_to_enter();	
+
 	__mvspace_commit();
 	__threadpool[__selftid].retval = value;
 	__threadpool[__selftid].state = E_NONE;
@@ -186,7 +186,8 @@ int sthread_join(sthread_t thread, void **thread_return)
 {
 	setup_sync();
 	__DEBUG_PRINT(("tid %d join0 \n", __selftid));
-	wait_sem(__threadpool[__selftid].lock1);
+	
+	wait_to_enter();
 		
 	__mvspace_commit();
 	__threadpool[__selftid].state = E_STOPPED;
