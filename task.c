@@ -184,7 +184,8 @@ void sthread_exit(void *value)
 	v_next_and_wait();
 	__DEBUG_PRINT(("tid %d exit3 \n", __selftid));
 	post_sem(__threadpool[__selftid].joinlock);
-	sleep(1);
+	sleep(5);
+	exit(0);
 }
 
 int sthread_join(sthread_t thread, void **thread_return)
