@@ -3,11 +3,12 @@
 
 #include "task.h"
 #include "semaphore.h"
+#include "settings.h"
 
 
 struct mutex_struct
 {
-	int lock;
+	int lock[MAXTHREADS];
 	int inited;
 };
 

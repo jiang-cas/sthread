@@ -1,7 +1,8 @@
 #include "include/semaphore.h"
 #include "include/globals.h"
 #include "include/settings.h"
-#include "include/mutex.h"
+#include "include/barrier.h"
+#include "include/sync.h"
 
 /* the lock will be inited once */
 void setup_sync(void)
@@ -31,11 +32,11 @@ void setup_mutex_sync(struct mutex_struct *mutex)
 	if(__sync_val_compare_and_swap(&(mutex->inited), 0, 1) == 0) {
 		int i;
 		for(i=0;i<MAXTHREADS;i++) {
-			init_sem(__threadpool[i].lock2, 0);
+			init_sem(mutex->lock[i], 0);
 		}
 		for(i=0;i<MAXTHREADS;i++) {
 			if(__threadpool[i].mutex == mutex) {
-				post_sem(__threadpool[i].lock2);
+				post_sem(mutex->lock[i]);
 				break;
 			}
 		}
@@ -49,7 +50,7 @@ void v_next_mutex(struct mutex_struct *mutex)
 	for(i=__selftid+1;i<MAXTHREADS;i++) {
 		if(__threadpool[i].state == E_STOPPED && __threadpool[i].mutex == mutex) {
 			__threadpool[i].state = E_MUTEX;
-			post_sem(__threadpool[i].lock2);
+			post_sem(mutex->lock[i]);
 			return;
 		}
 	}

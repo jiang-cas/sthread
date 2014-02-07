@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "heap.h"
 #include <semaphore.h>
+#include "barrier.h"
+#include "mutex.h"
 
 
 struct counter_struct
@@ -22,6 +24,7 @@ typedef struct sthread_t
 	int lock2;
 	int joinlock;
 	struct mutex_struct *mutex;
+	struct barrier_struct *barrier;
 	int leaved;
 	
 } sthread_t;

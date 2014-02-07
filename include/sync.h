@@ -1,5 +1,6 @@
 #ifndef SYNC_H
 #define SYNC_H
+#include "mutex.h"
 
 void setup_sync(void);
 
