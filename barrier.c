@@ -23,16 +23,27 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 {
 	if(barrier->barrier) {
 		setup_sync();
+		__DEBUG_PRINT(("tid %d barrier1\n", __selftid));
 		wait_to_enter();
 		__mvspace_commit();
 		__threadpool[__selftid].state = E_STOPPED;
 		__threadpool[__selftid].barrier = barrier->barrier;
 		__sync_fetch_and_add(&(barrier->barrier->num), 1);
+		__DEBUG_PRINT(("tid %d barrier2\n", __selftid));
 		v_next_and_wait();
+		__DEBUG_PRINT(("tid %d barrier3\n", __selftid));
 		__mvspace_pull();
-		if(barrier->barrier->total == barrier->barrier->num)
+		if(barrier->barrier->total == barrier->barrier->num) {
+			int i;
+			for(i=0;i<MAXTHREADS;i++) {
+				if(__threadpool[i].barrier == barrier->barrier)
+					__threadpool[i].state = E_NORMAL;
+			}
 			post_sem(barrier->barrier->sema);
+		}
+		__DEBUG_PRINT(("tid %d barrier4\n", __selftid));
 		wait_sem(barrier->barrier->sema);
+		__DEBUG_PRINT(("tid %d barrier5\n", __selftid));
 		post_sem(barrier->barrier->sema);
 
 		leave_sync();

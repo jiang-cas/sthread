@@ -63,10 +63,10 @@ void v_next_and_wait(void)
 	for(i=__selftid+1;i<MAXTHREADS;i++) {
 		if(__threadpool[i].state != E_NONE && __threadpool[i].state != E_STOPPED) {
 			post_sem(__threadpool[i].lock1);
-			__DEBUG_PRINT(("tid %d barrier value1 %d \n", __selftid, read_sem(*(__global_barrier1.val))));
+//			__DEBUG_PRINT(("tid %d barrier value1 %d \n", __selftid, read_sem(*(__global_barrier1.val))));
 			wait_sem(*(__global_barrier1.val));
 			post_sem(*(__global_barrier1.val));
-			__DEBUG_PRINT(("tid %d barrier value2 %d \n", __selftid, read_sem(*(__global_barrier1.val))));
+//			__DEBUG_PRINT(("tid %d barrier value2 %d \n", __selftid, read_sem(*(__global_barrier1.val))));
 			return;
 		}
 	}
