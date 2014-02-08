@@ -10,7 +10,7 @@
 
 struct counter_struct
 {
-	int *val;
+	volatile int *val;
 };
 
 typedef struct sthread_t
