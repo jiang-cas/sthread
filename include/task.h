@@ -55,7 +55,6 @@ sthread_t *__lasttask(void);
 
 
 __attribute__((constructor)) void init();
-//__attribute__((destructor)) void cleanup();
 int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(void *), void *args);
 sthread_t sthread_self(void);
 
