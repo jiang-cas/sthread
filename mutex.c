@@ -4,10 +4,11 @@
 #include "include/sync.h"
 #include "include/mvspace.h"
 #include "include/semaphore.h"
+#include <sys/mman.h>
 
 int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr) 
 {
-	mutex->mutex = mvshared_malloc(sizeof(struct mutex_struct));
+	mutex->mutex = (struct mutex_struct *)mvshared_malloc(sizeof(struct mutex_struct));
 	if(mutex->mutex) {
 		int i;
 		for(i=0;i<MAXTHREADS;i++)
@@ -15,6 +16,13 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 		return 0;
 	}
 	return -1;
+}
+
+sthread_mutex_t sthread_mutex_default_init(void)
+{
+	sthread_mutex_t mutex;
+	mutex.mutex = (struct mutex_struct *)mmap(NULL, sizeof(struct mutex_struct), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	return mutex;
 }
 
 int sthread_mutex_destroy(sthread_mutex_t *mutex)

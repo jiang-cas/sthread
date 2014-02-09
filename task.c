@@ -97,19 +97,19 @@ void __init_threadlist(void)
 /* allocate the counter of threads_number and initialize it into 0 */
 void __init_shared_globals(void)
 {
-	__registered.val = mvshared_malloc(sizeof(int));
+	__registered.val = (int *)mvshared_malloc(sizeof(int));
 	*(__registered.val) = 0;
 
-	__initsync.val = mvshared_malloc(sizeof(int));
+	__initsync.val = (int *)mvshared_malloc(sizeof(int));
 	*(__initsync.val) = 0;
 
-	__synced.val = mvshared_malloc(sizeof(int));
+	__synced.val = (int *)mvshared_malloc(sizeof(int));
 	*(__synced.val) = 0;
 
-	__semkey.val = mvshared_malloc(sizeof(int));
+	__semkey.val = (int *)mvshared_malloc(sizeof(int));
 	*(__semkey.val) = SEM_KEY_START;
 
-	__global_barrier1.val = mvshared_malloc(sizeof(int));
+	__global_barrier1.val = (int *)mvshared_malloc(sizeof(int));
 	*(__global_barrier1.val) = new_sem();
 
 }
@@ -130,6 +130,17 @@ __attribute__((constructor)) void init()
 	__init_shared_globals();
 	__init_threadlist();
 }
+
+/*__attribute__((destructor)) void cleanup()
+{
+	int i;
+	for(i=0;i<MAXTHREADS;i++) {
+		del_sem(__threadpool[i].lock1);
+		del_sem(__threadpool[i].lock2);
+		del_sem(__threadpool[i].joinlock);
+	}
+	del_sem(*(__global_barrier1.val));
+}*/
 
 
 int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(void *), void *args)
@@ -221,13 +232,3 @@ void sthread_main_wait(int n)
 	*(__synced.val) = 1;
 }
 
-void sthread_return(void)
-{
-	int i;
-	for(i=0;i<MAXTHREADS;i++) {
-		del_sem(__threadpool[i].lock1);
-		del_sem(__threadpool[i].lock2);
-		del_sem(__threadpool[i].joinlock);
-	}
-	del_sem(*(__global_barrier1.val));
-}

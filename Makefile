@@ -1,6 +1,9 @@
 all:libsthread.a
 libsthread.a:*.c
-	gcc -c *.c
+	mkdir objs
+	gcc -Wall -g -c *.c
 	ar rs libsthread.a *.o
+	mv *.o objs
 clean:
-	rm *.o libsthread.a
+	rm -rf objs
+	rm  libsthread.a

@@ -8,7 +8,7 @@
 
 int sthread_barrier_init(sthread_barrier_t *barrier, const sthread_barrierattr_t *attr, unsigned int count) 
 {
-	barrier->barrier = mvshared_malloc(sizeof(struct barrier_struct));
+	barrier->barrier = (struct barrier_struct *)mvshared_malloc(sizeof(struct barrier_struct));
 	if(barrier->barrier) {
 		barrier->barrier->total = count;
 		barrier->barrier->num = 0;
