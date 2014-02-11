@@ -13,12 +13,11 @@ union semun
 	unsigned short *array;
 };
 
-int new_sem(void);
-int init_sem(int sem_id, int init_value);
-int del_sem(int sem_id);
-int read_sem(int sem_id);
-int wait_sem(int sem_id);
-int post_sem(int sem_id);
-int post_multiple_sem(int sem_id, int n);
+int new_sem(int total);
+int init_sem(int sem_id, int num, int init_value);
+int del_sem(int sem_id, int num);
+int read_sem(int sem_id, int num);
+int wait_sem(int sem_id, int num);
+int post_sem(int sem_id, int num);
 
 #endif

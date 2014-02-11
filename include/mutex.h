@@ -8,8 +8,8 @@
 
 struct mutex_struct
 {
-	int lock[MAXTHREADS];
-	int inited;
+	int locks;
+	volatile int inited;
 };
 
 typedef struct sthread_mutex_t

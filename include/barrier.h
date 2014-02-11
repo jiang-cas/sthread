@@ -4,9 +4,9 @@
 struct barrier_struct 
 {
 	int total;
-	int num;
+	volatile int num;
 	int sema;
-	int inited;
+	volatile int inited;
 };
 
 

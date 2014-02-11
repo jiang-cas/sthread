@@ -12,8 +12,8 @@ int sthread_barrier_init(sthread_barrier_t *barrier, const sthread_barrierattr_t
 	if(barrier->barrier) {
 		barrier->barrier->total = count;
 		barrier->barrier->num = 0;
-		barrier->barrier->sema = new_sem();
-		init_sem(barrier->barrier->sema, 0);
+		barrier->barrier->sema = new_sem(1);
+		init_sem(barrier->barrier->sema, 0, 0);
 		barrier->barrier->inited = 1;
 		return 0;
 	}
@@ -44,12 +44,12 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 			}
 		__DEBUG_PRINT(("tid %d barrier3.5\n", __selftid));
 			barrier->barrier->inited = 0;
-			post_sem(barrier->barrier->sema);
+			post_sem(barrier->barrier->sema, 0);
 		}
 		__DEBUG_PRINT(("tid %d barrier4\n", __selftid));
-		wait_sem(barrier->barrier->sema);
+		wait_sem(barrier->barrier->sema, 0);
 		__DEBUG_PRINT(("tid %d barrier5\n", __selftid));
-		post_sem(barrier->barrier->sema);
+		post_sem(barrier->barrier->sema, 0);
 
 		leave_sync();
 
@@ -61,7 +61,7 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 int sthread_barrier_destroy(sthread_barrier_t *barrier)
 {
 	if(barrier->barrier) {
-		del_sem(barrier->barrier->sema);
+		del_sem(barrier->barrier->sema, 0);
 		mvshared_free(barrier->barrier);
 		return 0;
 	}

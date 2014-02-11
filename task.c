@@ -84,10 +84,10 @@ void __init_threadlist(void)
 	for(i=0;i<MAXTHREADS;i++) {
 		__threadpool[i].state = E_NONE;
 		__threadpool[i].leaved = 1;
-		__threadpool[i].lock1 = new_sem();
-		__threadpool[i].lock2 = new_sem();
-		__threadpool[i].joinlock = new_sem();
-		init_sem(__threadpool[i].joinlock, 0);
+		__threadpool[i].lock1 = new_sem(1);
+		__threadpool[i].lock2 = new_sem(1);
+		__threadpool[i].joinlock = new_sem(1);
+		init_sem(__threadpool[i].joinlock, 0, 0);
 		__threadpool[i].mutex = 0;
 	}
 	__threadpool[0].state = E_NORMAL;
@@ -110,7 +110,7 @@ void __init_shared_globals(void)
 	*(__semkey.val) = SEM_KEY_START;
 
 	__global_barrier1.val = (int *)mvshared_malloc(sizeof(int));
-	*(__global_barrier1.val) = new_sem();
+	*(__global_barrier1.val) = new_sem(1);
 
 }
 
@@ -135,11 +135,11 @@ __attribute__((constructor)) void init()
 {
 	int i;
 	for(i=0;i<MAXTHREADS;i++) {
-		del_sem(__threadpool[i].lock1);
-		del_sem(__threadpool[i].lock2);
-		del_sem(__threadpool[i].joinlock);
+		del_sem(__threadpool[i].lock1, 0);
+		del_sem(__threadpool[i].lock2, 0);
+		del_sem(__threadpool[i].joinlock, 0);
 	}
-	del_sem(*(__global_barrier1.val));
+	del_sem(*(__global_barrier1.val), 0);
 }*/
 
 
@@ -194,7 +194,7 @@ void sthread_exit(void *value)
 
 	v_next_and_wait();
 	__DEBUG_PRINT(("tid %d exit3 \n", __selftid));
-	post_sem(__threadpool[__selftid].joinlock);
+	post_sem(__threadpool[__selftid].joinlock, 0);
 	sleep(5);
 	exit(0);
 }
@@ -214,7 +214,7 @@ int sthread_join(sthread_t thread, void **thread_return)
 	v_next_and_wait();
 	__DEBUG_PRINT(("tid %d join2 \n", __selftid));
 
-	wait_sem(__threadpool[thread.tid].joinlock);
+	wait_sem(__threadpool[thread.tid].joinlock, 0);
 	__DEBUG_PRINT(("tid %d join3 \n", __selftid));
 
 	__threadpool[__selftid].state = E_NORMAL;

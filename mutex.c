@@ -1,4 +1,4 @@
-#include "include/mutex.h"
+
 #include <unistd.h>
 #include "include/globals.h"
 #include "include/sync.h"
@@ -10,9 +10,7 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 {
 	mutex->mutex = (struct mutex_struct *)mvshared_malloc(sizeof(struct mutex_struct));
 	if(mutex->mutex) {
-		int i;
-		for(i=0;i<MAXTHREADS;i++)
-			mutex->mutex->lock[i] = new_sem();
+		mutex->mutex->locks = new_sem(MAXTHREADS);
 		return 0;
 	}
 	return -1;
@@ -21,9 +19,7 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 int sthread_mutex_destroy(sthread_mutex_t *mutex)
 {
 	if(mutex->mutex) {
-		int i;
-		for(i=0;i<MAXTHREADS;i++)
-			del_sem(mutex->mutex->lock[i]);
+		del_sem(mutex->mutex->locks, 0);
 		mvshared_free(mutex->mutex);
 		return 0;
 	}
@@ -48,7 +44,7 @@ int sthread_mutex_lock(sthread_mutex_t *mutex)
 		__DEBUG_PRINT(("tid %d lock2 \n", __selftid));
 
 		setup_mutex_sync(mutex->mutex);	
-		wait_sem(mutex->mutex->lock[__selftid]);
+		wait_sem(mutex->mutex->locks, __selftid);
 		__threadpool[__selftid].state = E_MUTEX;
 
 		__DEBUG_PRINT(("tid %d lock3 \n", __selftid));

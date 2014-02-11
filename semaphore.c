@@ -3,41 +3,41 @@
 #include <stdio.h>
 #include "include/globals.h"
 
-int new_sem(void)
+int new_sem(int total)
 {
-	return semget((*(__semkey.val))++, 1, IPC_CREAT | 0666);
+	return semget((*(__semkey.val))++, total, IPC_CREAT | 0666);
 }
 
-int init_sem(int sem_id, int init_value)
+int init_sem(int sem_id, int num, int init_value)
 {
 	union semun sem_union;
 	sem_union.val = init_value;
-	if(semctl(sem_id, 0, SETVAL, sem_union) == -1) {
+	if(semctl(sem_id, num, SETVAL, sem_union) == -1) {
 		perror("Initialize semaphore");
 		return -1;
 	}
 	return 0;
 }
-int read_sem(int sem_id)
+int read_sem(int sem_id, int num)
 {
 	union semun sem_union;
-	return semctl(sem_id, 0, GETVAL, sem_union);
+	return semctl(sem_id, num, GETVAL, sem_union);
 }
 
-int del_sem(int sem_id)
+int del_sem(int sem_id, int num)
 {
 	union semun sem_union;
-	if(semctl(sem_id, 0, IPC_RMID, sem_union) == -1) {
+	if(semctl(sem_id, num, IPC_RMID, sem_union) == -1) {
 		perror("Delete semaphore");
 		return -1;
 	}
 	return 0;
 }
 
-int wait_sem(int sem_id)
+int wait_sem(int sem_id, int num)
 {
 	struct sembuf sem_b;
-	sem_b.sem_num = 0;
+	sem_b.sem_num = num;
 	sem_b.sem_op = -1;
 	sem_b.sem_flg = SEM_UNDO;
 	if(semop(sem_id, &sem_b, 1) == -1) {
@@ -47,25 +47,11 @@ int wait_sem(int sem_id)
 	return 0;
 }
 
-int post_sem(int sem_id)
+int post_sem(int sem_id, int num)
 {
 	struct sembuf sem_b;
-	sem_b.sem_num = 0;
+	sem_b.sem_num = num;
 	sem_b.sem_op = 1;
-	sem_b.sem_flg = SEM_UNDO;
-
-	if(semop(sem_id, &sem_b, 1) == -1) {
-		perror("V ooperation");
-		return -1;
-	}
-	return 0;
-}
-
-int post_multiple_sem(int sem_id, int n)
-{
-	struct sembuf sem_b;
-	sem_b.sem_num = 0;
-	sem_b.sem_op = n;
 	sem_b.sem_flg = SEM_UNDO;
 
 	if(semop(sem_id, &sem_b, 1) == -1) {
