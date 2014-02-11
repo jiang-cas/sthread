@@ -41,8 +41,18 @@ void setup_mutex_sync(struct mutex_struct *mutex)
 			}
 		}
 	}
-	
 }
+
+void setup_barrier_sync(struct barrier_struct *barrier)
+{
+
+	if(__sync_val_compare_and_swap(&(barrier->inited), 0, 1) == 0) {
+		barrier->num = 0;
+		init_sem(barrier->sema, 0);
+	}
+}
+
+
 
 void v_next_mutex(struct mutex_struct *mutex)
 {

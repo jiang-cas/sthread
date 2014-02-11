@@ -41,9 +41,6 @@ extern "C" {
 
 	int sthread_mutex_unlock(sthread_mutex_t *mutex);
 
-	sthread_mutex_t sthread_mutex_default_init(void);
-#define STHREAD_MUTEX_INITIALIZER (sthread_mutex_default_init())
-
 	struct barrier_struct 
 	{
 		int total;

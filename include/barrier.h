@@ -6,6 +6,7 @@ struct barrier_struct
 	int total;
 	int num;
 	int sema;
+	int inited;
 };
 
 

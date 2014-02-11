@@ -14,6 +14,7 @@ int sthread_barrier_init(sthread_barrier_t *barrier, const sthread_barrierattr_t
 		barrier->barrier->num = 0;
 		barrier->barrier->sema = new_sem();
 		init_sem(barrier->barrier->sema, 0);
+		barrier->barrier->inited = 1;
 		return 0;
 	}
 	return -1;
@@ -23,6 +24,7 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 {
 	if(barrier->barrier) {
 		setup_sync();
+		setup_barrier_sync(barrier->barrier);
 		__DEBUG_PRINT(("tid %d barrier1\n", __selftid));
 		wait_to_enter();
 		__mvspace_commit();
@@ -33,12 +35,15 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 		v_next_and_wait();
 		__DEBUG_PRINT(("tid %d barrier3\n", __selftid));
 		__mvspace_pull();
+
 		if(barrier->barrier->total == barrier->barrier->num) {
 			int i;
 			for(i=0;i<MAXTHREADS;i++) {
 				if(__threadpool[i].barrier == barrier->barrier)
 					__threadpool[i].state = E_NORMAL;
 			}
+		__DEBUG_PRINT(("tid %d barrier3.5\n", __selftid));
+			barrier->barrier->inited = 0;
 			post_sem(barrier->barrier->sema);
 		}
 		__DEBUG_PRINT(("tid %d barrier4\n", __selftid));
