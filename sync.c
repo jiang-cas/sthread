@@ -58,9 +58,9 @@ void setup_barrier_sync(struct barrier_struct *barrier)
 
 
 void v_next_mutex(struct mutex_struct *mutex)
-{
+{;
 	int i;
-	for(i=__selftid+1;i<MAXTHREADS;i++) {
+	for(i=0;i<MAXTHREADS;i++) {
 		if(__threadpool[i].state == E_STOPPED && __threadpool[i].mutex == mutex) {
 			__threadpool[i].state = E_MUTEX;
 			post_sem(mutex->locks, i);

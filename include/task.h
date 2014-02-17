@@ -6,6 +6,7 @@
 #include <semaphore.h>
 #include "barrier.h"
 #include "mutex.h"
+#include "cond.h"
 
 
 struct counter_struct
@@ -24,6 +25,7 @@ typedef struct sthread_t
 	int lock2;
 	int joinlock;
 	struct mutex_struct *mutex;
+	struct cond_struct *cond;
 	struct barrier_struct *barrier;
 	int leaved;
 	

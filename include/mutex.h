@@ -1,7 +1,6 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
-#include "task.h"
 #include "semaphore.h"
 #include "settings.h"
 
