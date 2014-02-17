@@ -11,6 +11,7 @@ int sthread_mutex_init(sthread_mutex_t *mutex, const sthread_mutexattr_t * attr)
 	mutex->mutex = (struct mutex_struct *)mvshared_malloc(sizeof(struct mutex_struct));
 	if(mutex->mutex) {
 		mutex->mutex->locks = new_sem(MAXTHREADS);
+		mutex->mutex->inited = 0;
 		return 0;
 	}
 	return -1;
@@ -35,7 +36,6 @@ int sthread_mutex_lock(sthread_mutex_t *mutex)
 		__mvspace_commit();
 		__threadpool[__selftid].state = E_STOPPED;
 		__threadpool[__selftid].mutex = mutex->mutex;
-		mutex->mutex->inited = 0;
 
 		__DEBUG_PRINT(("tid %d lock1 \n", __selftid));
 		v_next_and_wait();
