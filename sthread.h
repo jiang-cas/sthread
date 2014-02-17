@@ -61,33 +61,59 @@ extern "C" {
 
 	int sthread_barrier_destroy(sthread_barrier_t *barrier);
 
+
+	struct cond_struct {
+			int locks;
+	};
+
+	typedef struct sthread_cond_t
+	{
+			struct cond_struct *cond;
+	} sthread_cond_t;
+
+	typedef struct sthread_condattr_t
+	{
+	} sthread_condattr_t;
+
+	int sthread_cond_init(sthread_cond_t *cond, sthread_condattr_t *cond_attr);
+
+	int sthread_cond_signal(sthread_cond_t *cond);
+
+	int sthread_cond_broadcast(sthread_cond_t *cond);
+
+	int sthread_cond_wait(sthread_cond_t *cond, sthread_mutex_t *mutex);
+
+	int sthread_cond_timewait(sthread_cond_t *cond, sthread_mutex_t *mutex, const struct timespec *abstime);
+
+	int sthread_cond_destroy(sthread_cond_t *cond);
+
 	struct heap_struct
 	{
-		void *privatebase;
-		mspace privatemsp;
-		void *sharedbase;
-		mspace sharedmsp;
+			void *privatebase;
+			mspace privatemsp;
+			void *sharedbase;
+			mspace sharedmsp;
 	};
 
 	typedef struct sthread_t
 	{
-		unsigned int tid;
-		void *retval;
-		int pid;
-		struct heap_struct heap;
-		int state;
-		int lock1;
-		int lock2;
-		int joinlock;
-		struct mutex_struct *mutex;
-		struct barrier_struct *barrier;
-		int leaved;
+			unsigned int tid;
+			void *retval;
+			int pid;
+			struct heap_struct heap;
+			int state;
+			int lock1;
+			int lock2;
+			int joinlock;
+			struct mutex_struct *mutex;
+			struct barrier_struct *barrier;
+			int leaved;
 
 	} sthread_t;
 
 	typedef struct sthread_attr_t 
 	{
-		unsigned int stack_size;
+			unsigned int stack_size;
 	} sthread_attr_t;
 
 	__attribute__((constructor)) void init();
