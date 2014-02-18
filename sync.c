@@ -7,11 +7,11 @@
 /* the lock will be inited once */
 void setup_sync(void)
 {
-	int i;
+	//int i;
 	while((*__synced.val) != 1);
-	for(i=0;i<MAXTHREADS;i++) {
+/*	for(i=0;i<MAXTHREADS;i++) {
 		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved != 1));
-	}
+	}*/
 	if(__sync_val_compare_and_swap(__initsync.val, 0, 1) == 0) {
 		int i;
 		init_sem(*(__global_barrier1.val), 0, 0);
@@ -89,8 +89,12 @@ void v_next_and_wait(void)
 
 void leave_sync(void)
 {
+	int i;
 	__threadpool[__selftid].leaved = 1;
 	(*__initsync.val) = 0;
+	for(i=0;i<MAXTHREADS;i++) {
+		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved != 1));
+	}
 }
 
 void wait_to_enter(void)

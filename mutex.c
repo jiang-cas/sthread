@@ -30,6 +30,7 @@ int sthread_mutex_destroy(sthread_mutex_t *mutex)
 int sthread_mutex_lock(sthread_mutex_t *mutex)
 {
 	if(mutex->mutex) {
+		__DEBUG_PRINT(("tid %d lock-1 \n", __selftid));
 		setup_sync();
 		__DEBUG_PRINT(("tid %d lock0 \n", __selftid));
 		wait_to_enter();
@@ -50,6 +51,7 @@ int sthread_mutex_lock(sthread_mutex_t *mutex)
 		__DEBUG_PRINT(("tid %d lock3 \n", __selftid));
 	
 		leave_sync();
+		__DEBUG_PRINT(("tid %d lock4 \n", __selftid));
 		return 0;
 	}
 	return -1;
@@ -58,6 +60,7 @@ int sthread_mutex_lock(sthread_mutex_t *mutex)
 int sthread_mutex_unlock(sthread_mutex_t *mutex)
 {
 	if(mutex->mutex) {
+		__DEBUG_PRINT(("tid %d unlock-1 \n", __selftid));
 		setup_sync();
 		__DEBUG_PRINT(("tid %d unlock0 \n", __selftid));
 		wait_to_enter();
