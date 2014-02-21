@@ -66,6 +66,7 @@ int sthread_mutex_unlock(sthread_mutex_t *mutex)
 		wait_to_enter();
 		__mvspace_commit();
 		__threadpool[__selftid].state = E_NORMAL;
+		__threadpool[__selftid].mutex = NULL;
 		__DEBUG_PRINT(("tid %d unlock1 \n", __selftid));
 		v_next_and_wait();
 		__mvspace_pull();
