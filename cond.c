@@ -70,3 +70,8 @@ int sthread_cond_signal(sthread_cond_t *cond)
 	}
 	return -1;
 }
+
+int sthread_cond_broadcast(sthread_cond_t *cond)
+{
+	return sthread_cond_signal(cond);
+}

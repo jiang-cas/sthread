@@ -50,6 +50,8 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 		wait_sem(barrier->barrier->sema, 0);
 		__DEBUG_PRINT(("tid %d barrier5\n", __selftid));
 		post_sem(barrier->barrier->sema, 0);
+		__threadpool[__selftid].barrier = NULL;
+		__threadpool[__selftid].state = E_NORMAL;
 
 		leave_sync();
 
