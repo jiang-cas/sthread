@@ -68,6 +68,8 @@ void v_next_mutex(struct mutex_struct *mutex)
 			return;
 		}
 	}
+	__DEBUG_PRINT(("********* mutex inted %d\n", mutex->inited));
+	mutex->inited = 0;
 	
 }
 
