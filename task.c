@@ -14,7 +14,9 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <sched.h>
+#define _GNU_SOURCE
+#include <linux/sched.h>
+#include <sys/syscall.h>
 
 unsigned int __alloc_tid()
 {
@@ -65,6 +67,7 @@ void __setup_newtask(void)
 	__currenttask()->pid = getpid();
 	__currenttask()->retval = NULL;
 	__addtask(__currenttask());
+	__mvspace_clone();
 }
 
 void *__start_routine(void *arw)
@@ -129,6 +132,8 @@ __attribute__((constructor)) void init()
 	/* init register thread totalcount */	
 	__init_shared_globals();
 	__init_threadlist();
+	
+	__mvspace_setflag();
 }
 
 /*__attribute__((destructor)) void cleanup()
@@ -160,7 +165,8 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 		struct __argwrapper arw;
 		arw.func = func;
 		arw.args = args;
-		ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, SIGCHLD | 0, &arw);
+		//ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, SIGCHLD | 0, &arw);
+		ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, CLONE_VM | CLONE_FS | CLONE_THREAD | CLONE_FILES | CLONE_SIGHAND | SIGCHLD, &arw);
 		if(-1 == ret) {
 			perror("clone");
 			return -2;
@@ -217,7 +223,9 @@ int sthread_join(sthread_t thread, void **thread_return)
 	wait_sem(__threadpool[thread.tid].joinlock, 0);
 	__DEBUG_PRINT(("tid %d join3 \n", __selftid));
 
+	__mvspace_pull();
 	__threadpool[__selftid].state = E_NORMAL;
+
 	if(thread_return)
 		*thread_return = __threadpool[thread.tid].retval;
 

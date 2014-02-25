@@ -24,5 +24,8 @@
 
 #define SEM_KEY_START 6666
 
+#define SELF_THREAD (__threadpool[__selftid])
+#define SELF_HEAP (SELF_THREAD.heap)
+
 #endif
 

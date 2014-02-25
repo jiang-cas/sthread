@@ -10,8 +10,6 @@ void __init_global_heap()
 	__sharedbase = mmap(NULL, BLOCKSIZE*MAXTHREADS, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 }
 
-#define SELF_THREAD (__threadpool[__selftid])
-#define SELF_HEAP (SELF_THREAD.heap)
 
 /* create mspace in the right place */
 void __init_heap(unsigned int tid)
