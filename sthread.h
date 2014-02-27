@@ -122,6 +122,7 @@ extern "C" {
 	void sthread_exit(void *value);
 	int sthread_join(sthread_t thread, void **thread_return);
 	void sthread_main_wait(int n);
+	void sthread_main_exit(int n);
 #ifdef __cplusplus
 }
 #endif

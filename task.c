@@ -88,7 +88,7 @@ void __init_threadlist(void)
 		__threadpool[i].state = E_NONE;
 		__threadpool[i].leaved = 1;
 		__threadpool[i].lock1 = new_sem(1);
-		__threadpool[i].lock2 = new_sem(1);
+	//	__threadpool[i].lock2 = new_sem(1);
 		__threadpool[i].joinlock = new_sem(1);
 		init_sem(__threadpool[i].joinlock, 0, 0);
 		__threadpool[i].mutex = 0;
@@ -165,8 +165,7 @@ int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(voi
 		struct __argwrapper arw;
 		arw.func = func;
 		arw.args = args;
-		//ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, SIGCHLD | 0, &arw);
-		ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, CLONE_VM | CLONE_FS | CLONE_THREAD | CLONE_FILES | CLONE_SIGHAND | SIGCHLD, &arw);
+		ret = clone(__start_routine, (void *)(unsigned char *)pstack + stack_size, SIGCHLD | 0, &arw);
 		if(-1 == ret) {
 			perror("clone");
 			return -2;
@@ -240,3 +239,14 @@ void sthread_main_wait(int n)
 	*(__synced.val) = 1;
 }
 
+void sthread_main_exit(int n)
+{
+	int i;
+	for(i=0;i<MAXTHREADS;i++) {
+		del_sem(__threadpool[i].lock1, 0);	
+		del_sem(__threadpool[i].joinlock, 0);	
+	}		
+	del_sem(*(__global_barrier1.val), 0);
+	exit(n);
+
+}

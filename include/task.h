@@ -22,7 +22,7 @@ typedef struct sthread_t
 	struct heap_struct heap;
 	int state;
 	int lock1;
-	int lock2;
+//	int lock2;
 	int joinlock;
 	struct mutex_struct *mutex;
 	struct cond_struct *cond;
