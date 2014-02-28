@@ -96,7 +96,9 @@ void leave_sync(void)
 	(*__initsync.val) = 0;
 	for(i=0;i<MAXTHREADS;i++) {
 //		__DEBUG_PRINT(("tiid %d status %d\n", i, __threadpool[i].state));
-		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved != 1));
+		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved != 1)) {
+//		__DEBUG_PRINT(("tiid %d status %d\n", i, __threadpool[i].state));
+		};
 	}
 	__DEBUG_PRINT(("tid %d has leaved\n", __selftid));
 }

@@ -35,6 +35,9 @@ int sthread_cond_wait(sthread_cond_t *cond, sthread_mutex_t *mutex)
 		setup_sync();
 		wait_to_enter();
 		__DEBUG_PRINT(("tid %d cond 2 \n", __selftid));
+//		if(__threadpool[])
+		v_next_mutex(mutex->mutex);
+		__threadpool[__selftid].mutex = NULL;
 		__mvspace_commit();
 		__threadpool[__selftid].state = E_STOPPED;
 		__threadpool[__selftid].cond = cond->cond;
@@ -47,6 +50,9 @@ int sthread_cond_wait(sthread_cond_t *cond, sthread_mutex_t *mutex)
 
 		__DEBUG_PRINT(("tid %d cond 5 \n", __selftid));
 		wait_sem(cond->cond->locks, __selftid);
+		__threadpool[__selftid].mutex = mutex->mutex;
+		__DEBUG_PRINT(("tid %d cond 5.5 \n", __selftid));
+		wait_sem(mutex->mutex->locks, __selftid);
 		__threadpool[__selftid].state = E_NORMAL;
 
 		__DEBUG_PRINT(("tid %d cond 6 \n", __selftid));
