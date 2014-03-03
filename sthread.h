@@ -120,6 +120,7 @@ extern "C" {
 	int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(void *), void *args);
 	sthread_t sthread_self(void);
 	void sthread_exit(void *value);
+	void sthread_shared(void *addr, size_t size);
 	int sthread_join(sthread_t thread, void **thread_return);
 	void sthread_main_wait(int n);
 	void sthread_main_exit(int n);

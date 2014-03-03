@@ -8,6 +8,8 @@
 
 extern void *__privatebase;
 extern void *__sharedbase;
+extern void *__globalbase;
+extern mspace __globalmsp;
 extern unsigned int __localtid;
 extern unsigned int __selftid;
 
@@ -18,6 +20,8 @@ extern struct counter_struct __synced;
 extern struct counter_struct __global_barrier1;
 extern struct counter_struct __semkey;
 
+extern struct va_struct *__vamap;
 
+extern int __vamsize;
 
 #endif

@@ -14,6 +14,14 @@ struct counter_struct
 	volatile int *val;
 };
 
+struct va_struct
+{
+	void *addr;
+	void *shared;
+	void *backup;
+	size_t size;
+};
+
 typedef struct sthread_t
 {
 	unsigned int tid;

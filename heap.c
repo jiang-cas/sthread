@@ -8,6 +8,7 @@ void __init_global_heap()
 {
 	__privatebase = mmap(NULL, BLOCKSIZE*MAXTHREADS, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	__sharedbase = mmap(NULL, BLOCKSIZE*MAXTHREADS, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	__globalbase = mmap(NULL, BLOCKSIZE*MAXTHREADS, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 }
 
 
@@ -21,6 +22,7 @@ void __init_heap(unsigned int tid)
 	SELF_HEAP.privatemsp = create_mspace_with_base(privatebase, BLOCKSIZE, 0); 
 	SELF_HEAP.sharedbase = sharedbase;
 	SELF_HEAP.sharedmsp = create_mspace_with_base(sharedbase, BLOCKSIZE, 0); 
+	__globalmsp = create_mspace_with_base(__globalbase, BLOCKSIZE*MAXTHREADS, 0); 
 }
 
 void *mvprivate_malloc(size_t bytes)
@@ -42,3 +44,14 @@ void mvshared_free(void *mem)
 {
 	mspace_free(SELF_HEAP.sharedmsp, mem);
 }
+
+void *global_malloc(size_t bytes)
+{
+	return mspace_malloc(__globalmsp, bytes);
+}
+
+void global_free(void *mem)
+{
+	mspace_free(__globalmsp, mem);
+}
+

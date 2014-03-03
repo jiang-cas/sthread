@@ -42,6 +42,7 @@ void __init_localtid(void)
 void __init_threadpool(void)
 {
 	__threadpool = (sthread_t *)mmap(NULL, MAXTHREADS * sizeof(sthread_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	__vamap = (struct va_struct *)mmap(NULL, MAPSIZE * sizeof(struct va_struct), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 }
 
 /* add a new task to the task list, the state is E_NORMAL at first */
@@ -100,19 +101,19 @@ void __init_threadlist(void)
 /* allocate the counter of threads_number and initialize it into 0 */
 void __init_shared_globals(void)
 {
-	__registered.val = (int *)mvshared_malloc(sizeof(int));
+	__registered.val = (int *)global_malloc(sizeof(int));
 	*(__registered.val) = 0;
 
-	__initsync.val = (int *)mvshared_malloc(sizeof(int));
+	__initsync.val = (int *)global_malloc(sizeof(int));
 	*(__initsync.val) = 0;
 
-	__synced.val = (int *)mvshared_malloc(sizeof(int));
+	__synced.val = (int *)global_malloc(sizeof(int));
 	*(__synced.val) = 0;
 
-	__semkey.val = (int *)mvshared_malloc(sizeof(int));
+	__semkey.val = (int *)global_malloc(sizeof(int));
 	*(__semkey.val) = SEM_KEY_START;
 
-	__global_barrier1.val = (int *)mvshared_malloc(sizeof(int));
+	__global_barrier1.val = (int *)global_malloc(sizeof(int));
 	*(__global_barrier1.val) = new_sem(1);
 
 }
