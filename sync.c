@@ -81,12 +81,14 @@ void v_next_and_wait(void)
 			post_sem(__threadpool[i].lock1, 0);
 //			__DEBUG_PRINT(("tid %d barrier value1 %d \n", __selftid, read_sem(*(__global_barrier1.val))));
 			wait_sem(*(__global_barrier1.val), 0);
+			__threadpool[__selftid].arrived = 0;
 			post_sem(*(__global_barrier1.val), 0);
 //			__DEBUG_PRINT(("tid %d barrier value2 %d \n", __selftid, read_sem(*(__global_barrier1.val))));
 			return;
 		}
 	}
 	post_sem(*(__global_barrier1.val), 0);
+	__threadpool[__selftid].arrived = 0;
 }
 
 void leave_sync(void)
@@ -96,7 +98,7 @@ void leave_sync(void)
 	(*__initsync.val) = 0;
 	for(i=0;i<MAXTHREADS;i++) {
 //		__DEBUG_PRINT(("tiid %d status %d\n", i, __threadpool[i].state));
-		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved != 1)) {
+		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved == 0) && (__threadpool[i].arrived == 0)) {
 //		__DEBUG_PRINT(("tiid %d status %d\n", i, __threadpool[i].state));
 		};
 	}
@@ -106,6 +108,7 @@ void leave_sync(void)
 void wait_to_enter(void)
 {
 	wait_sem(__threadpool[__selftid].lock1, 0);
+	__threadpool[__selftid].arrived = 1;
 	__threadpool[__selftid].leaved = 0;
 }
 

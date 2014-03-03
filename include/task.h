@@ -28,6 +28,7 @@ typedef struct sthread_t
 	struct cond_struct *cond;
 	struct barrier_struct *barrier;
 	int leaved;
+	int arrived;
 	
 } sthread_t;
 
