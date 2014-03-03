@@ -24,15 +24,16 @@ int sthread_barrier_wait(sthread_barrier_t *barrier)
 {
 	if(barrier->barrier) {
 		setup_sync();
-		setup_barrier_sync(barrier->barrier);
+		//setup_barrier_sync(barrier->barrier);
 		__DEBUG_PRINT(("tid %d barrier1\n", __selftid));
 		wait_to_enter();
 		__mvspace_commit();
 		__threadpool[__selftid].state = E_STOPPED;
 		__threadpool[__selftid].barrier = barrier->barrier;
-		__sync_fetch_and_add(&(barrier->barrier->num), 1);
 		__DEBUG_PRINT(("tid %d barrier2\n", __selftid));
 		v_next_and_wait();
+		setup_barrier_sync(barrier->barrier);
+		__sync_fetch_and_add(&(barrier->barrier->num), 1);
 		__DEBUG_PRINT(("tid %d barrier3\n", __selftid));
 		__mvspace_pull();
 
