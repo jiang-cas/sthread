@@ -101,22 +101,22 @@ void __init_threadlist(void)
 void __init_shared_globals(void)
 {
 	int i;
-	__registered.val = (int *)global_malloc(sizeof(int));
+	__registered.val = (int *)mvshared_malloc(sizeof(int));
 	*(__registered.val) = 0;
 
-	__initsync.val = (int *)global_malloc(sizeof(int));
+	__initsync.val = (int *)mvshared_malloc(sizeof(int));
 	*(__initsync.val) = 0;
 
-	__synced.val = (int *)global_malloc(sizeof(int));
+	__synced.val = (int *)mvshared_malloc(sizeof(int));
 	*(__synced.val) = 0;
 
-	__semkey.val = (int *)global_malloc(sizeof(int));
+	__semkey.val = (int *)mvshared_malloc(sizeof(int));
 	*(__semkey.val) = SEM_KEY_START;
 
-	__global_barrier1.val = (int *)global_malloc(sizeof(int));
+	__global_barrier1.val = (int *)mvshared_malloc(sizeof(int));
 	*(__global_barrier1.val) = new_sem(1);
 
-	__sharedlist = (struct sharedlist_struct *)global_malloc(sizeof(struct sharedlist_struct));
+	__sharedlist = (struct sharedlist_struct *)mvshared_malloc(sizeof(struct sharedlist_struct));
 	__sharedlist->lock = new_sem(1);
 	init_sem(__sharedlist->lock, 0, 1);
 	__sharedlist->__vamsize = 0;
@@ -124,7 +124,7 @@ void __init_shared_globals(void)
 		(__sharedlist->__vamap)[i].addr = NULL;
 }
 
-__attribute__((constructor)) void init()
+void sthread_init()
 {
 	/* prepared for next thread, and now __selftid is 0 */
 	__init_localtid();
@@ -246,7 +246,7 @@ void sthread_main_wait(int n)
 	*(__synced.val) = 1;
 }
 
-void sthread_main_exit(int n)
+void sthread_clear(void)
 {
 	int i;
 	for(i=0;i<MAXTHREADS;i++) {
@@ -254,6 +254,6 @@ void sthread_main_exit(int n)
 		del_sem(__threadpool[i].joinlock, 0);	
 	}		
 	del_sem(*(__global_barrier1.val), 0);
-	exit(n);
+	munmap(__threadpool, MAXTHREADS * sizeof(sthread_t));
 
 }

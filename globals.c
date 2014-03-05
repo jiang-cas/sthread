@@ -3,8 +3,8 @@
 /* mvheap malloc base address*/
 void *__privatebase;
 void *__sharedbase;
-void *__globalbase;
-mspace __globalmsp; 
+//void *__globalbase;
+//mspace __globalmsp; 
 
 /* __localtid == __selftid, except in main thread  __localtid == number of total threads*/
 unsigned int __localtid;

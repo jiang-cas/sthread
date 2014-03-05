@@ -116,14 +116,14 @@ extern "C" {
 			unsigned int stack_size;
 	} sthread_attr_t;
 
-	__attribute__((constructor)) void init();
+	void sthread_init(void);
 	int sthread_create(sthread_t *newthread, sthread_attr_t *attr, void *(*func)(void *), void *args);
 	sthread_t sthread_self(void);
-	void sthread_exit(void *value);
+	void sthread_clear(void);
 	void sthread_shared(void *addr, size_t size);
 	int sthread_join(sthread_t thread, void **thread_return);
 	void sthread_main_wait(int n);
-	void sthread_main_exit(int n);
+	void sthread_exit(int n);
 #ifdef __cplusplus
 }
 #endif

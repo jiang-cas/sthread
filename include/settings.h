@@ -10,6 +10,7 @@
 #define STACKSIZE 4096
 #define MAXTHREADS 32
 #define BLOCKSIZE 10*1024*1024
+#define GLOBALSIZE 1024*1024*100
 
 #define E_NORMAL 2
 #define E_MUTEX 3

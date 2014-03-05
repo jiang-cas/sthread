@@ -22,9 +22,9 @@ void mvprivate_free(void *mem);
 void *mvshared_malloc(size_t bytes);
 
 void mvshared_free(void *mem);
-
+/*
 void *global_malloc(size_t bytes);
 
 void global_free(void *mem);
-
+*/
 #endif
