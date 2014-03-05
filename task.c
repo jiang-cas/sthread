@@ -42,7 +42,6 @@ void __init_localtid(void)
 void __init_threadpool(void)
 {
 	__threadpool = (sthread_t *)mmap(NULL, MAXTHREADS * sizeof(sthread_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-	__vamap = (struct va_struct *)mmap(NULL, MAPSIZE * sizeof(struct va_struct), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 }
 
 /* add a new task to the task list, the state is E_NORMAL at first */
@@ -101,6 +100,7 @@ void __init_threadlist(void)
 /* allocate the counter of threads_number and initialize it into 0 */
 void __init_shared_globals(void)
 {
+	int i;
 	__registered.val = (int *)global_malloc(sizeof(int));
 	*(__registered.val) = 0;
 
@@ -116,6 +116,12 @@ void __init_shared_globals(void)
 	__global_barrier1.val = (int *)global_malloc(sizeof(int));
 	*(__global_barrier1.val) = new_sem(1);
 
+	__sharedlist = (struct sharedlist_struct *)global_malloc(sizeof(struct sharedlist_struct));
+	__sharedlist->lock = new_sem(1);
+	init_sem(__sharedlist->lock, 0, 1);
+	__sharedlist->__vamsize = 0;
+	for(i=0;i<MAPSIZE;i++)
+		(__sharedlist->__vamap)[i].addr = NULL;
 }
 
 __attribute__((constructor)) void init()

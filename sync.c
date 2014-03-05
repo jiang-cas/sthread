@@ -9,9 +9,14 @@ void setup_sync(void)
 {
 	//int i;
 	while((*__synced.val) != 1);
+	__setup_sync();
 /*	for(i=0;i<MAXTHREADS;i++) {
 		while((__threadpool[i].state != E_NONE) && (__threadpool[i].state != E_STOPPED) && (__threadpool[i].leaved != 1));
 	}*/
+}
+
+void __setup_sync(void)
+{
 	if(__sync_val_compare_and_swap(__initsync.val, 0, 1) == 0) {
 		int i;
 		init_sem(*(__global_barrier1.val), 0, 0);

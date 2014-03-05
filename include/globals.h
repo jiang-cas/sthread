@@ -20,8 +20,6 @@ extern struct counter_struct __synced;
 extern struct counter_struct __global_barrier1;
 extern struct counter_struct __semkey;
 
-extern struct va_struct *__vamap;
-
-extern int __vamsize;
+extern struct sharedlist_struct *__sharedlist;
 
 #endif

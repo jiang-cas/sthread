@@ -18,6 +18,5 @@ struct counter_struct __synced;
 struct counter_struct __global_barrier1;
 struct counter_struct __semkey;
 
-struct va_struct *__vamap;
+struct sharedlist_struct *__sharedlist;
 
-int __vamsize;

@@ -60,3 +60,13 @@ int post_sem(int sem_id, int num)
 	}
 	return 0;
 }
+
+void __acquire_lock(int lock)
+{
+	wait_sem(lock, 0);
+}
+
+void __release_lock(int lock)
+{
+	post_sem(lock, 0);
+}

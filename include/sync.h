@@ -4,6 +4,7 @@
 #include "barrier.h"
 
 void setup_sync(void);
+void __setup_sync(void);
 
 void setup_mutex_sync(struct mutex_struct *mutex);
 void setup_barrier_sync(struct barrier_struct *mutex);

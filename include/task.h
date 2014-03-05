@@ -22,6 +22,13 @@ struct va_struct
 	size_t size;
 };
 
+struct sharedlist_struct
+{
+	int lock;
+	int __vamsize;
+	struct va_struct __vamap[MAPSIZE];
+};
+
 typedef struct sthread_t
 {
 	unsigned int tid;
