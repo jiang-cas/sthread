@@ -124,7 +124,7 @@ void __init_shared_globals(void)
 		(__sharedlist->__vamap)[i].addr = NULL;
 }
 
-void sthread_init()
+__attribute__((constructor)) void sthread_init()
 {
 	/* prepared for next thread, and now __selftid is 0 */
 	__init_localtid();
@@ -207,6 +207,7 @@ void sthread_exit(void *value)
 	v_next_and_wait();
 	__DEBUG_PRINT(("tid %d exit3 \n", __selftid));
 	post_sem(__threadpool[__selftid].joinlock, 0);
+//	leave_sync();
 	sleep(5);
 	exit(0);
 }
@@ -246,7 +247,7 @@ void sthread_main_wait(int n)
 	*(__synced.val) = 1;
 }
 
-void sthread_clear(void)
+void sthread_return(void)
 {
 	int i;
 	for(i=0;i<MAXTHREADS;i++) {
@@ -255,5 +256,9 @@ void sthread_clear(void)
 	}		
 	del_sem(*(__global_barrier1.val), 0);
 	munmap(__threadpool, MAXTHREADS * sizeof(sthread_t));
-
+}
+void sthread_clear(void)
+{
+	sthread_return();
+	sthread_init();
 }
